@@ -163,12 +163,12 @@ pipeline {
                     def valuesContent = readFile(env.VALUES_FILE)
 
                     if (valuesContent.contains("${projectName}:")) {
-                        echo "⚠️ 프로젝트 '${projectName}' 블럭이 이미 존재합니다. enabled를 true로 업데이트합니다."
-                        // 기존 블럭의 enabled를 true로 변경
-                        valuesContent = valuesContent.replaceAll(
-                            "(${projectName}:\\s*\\n\\s*enabled:\\s*)false",
-                            "\$1true"
-                        )
+                        echo "⚠️ 프로젝트 '${projectName}' 블럭이 이미 존재합니다. 입력값 기준으로 전체 덮어씁니다."
+                        // catalog 하위의 동일 project 블럭 전체를 새 modelBlock으로 교체
+                        def escapedProject = java.util.regex.Pattern.quote(projectName)
+                        def blockPattern = "(?ms)^  ${escapedProject}:\\n(?:    .*\\n|\\n)*?(?=^  [^\\s].*:\\n|\\z)"
+                        def normalizedBlock = modelBlock.startsWith("\n") ? modelBlock.substring(1) : modelBlock
+                        valuesContent = valuesContent.replaceFirst(blockPattern, normalizedBlock + "\n")
                         writeFile file: env.VALUES_FILE, text: valuesContent
                     } else {
                         // 새 블럭 append
