@@ -6,12 +6,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/bahn1075/mykubernetes.git
-    targetRevision: AI/desktop
-    path: helm/kubeai/models
-    helm:
-      valueFiles:
-        - values.yaml
+    repoURL: https://github.com/bahn1075/kubeai-cicd.git
+    targetRevision: main
+    path: models
   destination:
     server: https://kubernetes.default.svc
     namespace: kubeai

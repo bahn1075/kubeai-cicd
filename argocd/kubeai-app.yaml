@@ -6,16 +6,16 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/bahn1075/mykubernetes.git
-    targetRevision: AI/desktop
-    path: helm/kubeai/kubeai
-    helm:
-      valueFiles:
-        - values.yaml
+    repoURL: https://github.com/bahn1075/kubeai-cicd.git
+    targetRevision: main
+    path: kubeai
   destination:
     server: https://kubernetes.default.svc
     namespace: kubeai
   syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
