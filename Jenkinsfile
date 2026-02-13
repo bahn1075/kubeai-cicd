@@ -4,6 +4,7 @@ pipeline {
     parameters {
         string(
             name: 'PROJECT_NAME',
+            defaultValue: 'test1',
             description: 'project name (main branch에서 분기될 branch명으로 사용)',
             trim: true
         )
@@ -187,13 +188,30 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIALS_ID, usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                         withEnv(["BRANCH_NAME=${branchName}", "COMMIT_MSG=${commitMsg}"]) {
                             sh '''
+                                set -e
                                 git config user.email "jenkins@kubeai-cicd"
                                 git config user.name "Jenkins Pipeline"
+                                git remote set-url origin "$REPO_URL"
                                 git add -A
-                                git diff --cached --quiet && echo 'No changes to commit' || {
+                                if git diff --cached --quiet; then
+                                    echo 'No changes to commit'
+                                else
                                     git commit -m "$COMMIT_MSG"
-                                    git -c credential.username="$GIT_USERNAME" -c credential.helper='!f() { echo "password=$GIT_PASSWORD"; }; f' push origin "$BRANCH_NAME"
-                                }
+
+                                    # Jenkins credential username이 이메일인 경우 user 부분만 추출
+                                    PUSH_USER="${GIT_USERNAME%@*}"
+                                    if [ -z "$PUSH_USER" ]; then
+                                        PUSH_USER="$GIT_USERNAME"
+                                    fi
+
+                                    if ! git -c credential.username="$PUSH_USER" -c credential.helper='!f() { echo "password=$GIT_PASSWORD"; }; f' push origin "$BRANCH_NAME"; then
+                                        echo "❌ Git push 실패: Jenkins credential 'github' 권한을 확인하세요."
+                                        echo "   - Username: GitHub 로그인 ID (이메일 대신 계정명 권장)"
+                                        echo "   - Password: GitHub PAT"
+                                        echo "   - PAT 권한: repo(클래식) 또는 Contents: Read and write(fine-grained)"
+                                        exit 1
+                                    fi
+                                fi
                             '''
                         }
                     }
