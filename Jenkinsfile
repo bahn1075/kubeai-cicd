@@ -56,6 +56,7 @@ pipeline {
     environment {
         REPO_URL = 'https://github.com/bahn1075/kubeai-cicd.git'
         VALUES_FILE = 'models/values.yaml'
+        GIT_CREDENTIALS_ID = 'github'
     }
 
     stages {
@@ -85,7 +86,7 @@ pipeline {
             steps {
                 script {
                     // main 체크아웃
-                    git branch: 'main', url: env.REPO_URL
+                    git branch: 'main', credentialsId: env.GIT_CREDENTIALS_ID, url: env.REPO_URL
 
                     // 프로젝트명 브랜치 생성 (이미 존재하면 체크아웃)
                     def branchName = params.PROJECT_NAME.trim()
@@ -183,15 +184,18 @@ pipeline {
                     def branchName = params.PROJECT_NAME.trim()
                     def commitMsg = "feat(${branchName}): deploy ${params.LLM_SERVE} model ${params.LLM_MODEL} [${params.SERVICE_TYPE}]"
 
-                    sh """
-                        git config user.email "jenkins@kubeai-cicd"
-                        git config user.name "Jenkins Pipeline"
-                        git add -A
-                        git diff --cached --quiet && echo 'No changes to commit' || {
-                            git commit -m "${commitMsg}"
-                            git push origin ${branchName}
-                        }
-                    """
+                    withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIALS_ID, usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                        sh """
+                            git config user.email "jenkins@kubeai-cicd"
+                            git config user.name "Jenkins Pipeline"
+                            git remote set-url origin https://$GIT_USERNAME:$GIT_PASSWORD@github.com/bahn1075/kubeai-cicd.git
+                            git add -A
+                            git diff --cached --quiet && echo 'No changes to commit' || {
+                                git commit -m "${commitMsg}"
+                                git push origin ${branchName}
+                            }
+                        """
+                    }
                     echo "🚀 Push 완료: branch '${branchName}'"
                 }
             }
