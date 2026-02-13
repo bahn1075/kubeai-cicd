@@ -185,16 +185,17 @@ pipeline {
                     def commitMsg = "feat(${branchName}): deploy ${params.LLM_SERVE} model ${params.LLM_MODEL} [${params.SERVICE_TYPE}]"
 
                     withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIALS_ID, usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
-                        sh """
-                            git config user.email "jenkins@kubeai-cicd"
-                            git config user.name "Jenkins Pipeline"
-                            git remote set-url origin https://$GIT_USERNAME:$GIT_PASSWORD@github.com/bahn1075/kubeai-cicd.git
-                            git add -A
-                            git diff --cached --quiet && echo 'No changes to commit' || {
-                                git commit -m "${commitMsg}"
-                                git push origin ${branchName}
-                            }
-                        """
+                        withEnv(["BRANCH_NAME=${branchName}", "COMMIT_MSG=${commitMsg}"]) {
+                            sh '''
+                                git config user.email "jenkins@kubeai-cicd"
+                                git config user.name "Jenkins Pipeline"
+                                git add -A
+                                git diff --cached --quiet && echo 'No changes to commit' || {
+                                    git commit -m "$COMMIT_MSG"
+                                    git -c credential.username="$GIT_USERNAME" -c credential.helper='!f() { echo "password=$GIT_PASSWORD"; }; f' push origin "$BRANCH_NAME"
+                                }
+                            '''
+                        }
                     }
                     echo "🚀 Push 완료: branch '${branchName}'"
                 }
