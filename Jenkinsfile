@@ -56,6 +56,9 @@ pipeline {
 
     environment {
         REPO_URL = 'https://github.com/bahn1075/kubeai-cicd.git'
+        REPO_OWNER = 'bahn1075'
+        REPO_NAME = 'kubeai-cicd'
+        BASE_BRANCH = 'main'
         VALUES_FILE = 'models/values.yaml'
         GIT_CREDENTIALS_ID = 'github'
     }
@@ -216,6 +219,56 @@ pipeline {
                         }
                     }
                     echo "🚀 Push 완료: branch '${branchName}'"
+                }
+            }
+        }
+
+        stage('Create Merge Request') {
+            steps {
+                script {
+                    def branchName = params.PROJECT_NAME.trim()
+                    if (branchName == env.BASE_BRANCH) {
+                        echo "ℹ️ PR 생성 스킵: source branch가 '${env.BASE_BRANCH}'입니다."
+                        return
+                    }
+
+                    withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIALS_ID, usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                        withEnv(["BRANCH_NAME=${branchName}"]) {
+                            sh '''
+                                set -e
+                                API_URL="https://api.github.com/repos/$REPO_OWNER/$REPO_NAME"
+                                AUTH_HEADER="Authorization: token $GIT_PASSWORD"
+                                ACCEPT_HEADER="Accept: application/vnd.github+json"
+
+                                # 이미 열려 있는 PR이 있으면 재사용
+                                EXISTING_PR_URL=$(curl -fsSL \
+                                  -H "$AUTH_HEADER" \
+                                  -H "$ACCEPT_HEADER" \
+                                  "$API_URL/pulls?state=open&head=$REPO_OWNER:$BRANCH_NAME&base=$BASE_BRANCH" \
+                                  | sed -n 's/.*"html_url":"\\([^"]*\\)".*/\\1/p' | head -n 1)
+
+                                if [ -n "$EXISTING_PR_URL" ]; then
+                                    echo "🔁 기존 PR 재사용: $EXISTING_PR_URL"
+                                    exit 0
+                                fi
+
+                                PAYLOAD="{\\"title\\":\\"Merge $BRANCH_NAME into $BASE_BRANCH\\",\\"head\\":\\"$BRANCH_NAME\\",\\"base\\":\\"$BASE_BRANCH\\",\\"body\\":\\"Auto-created by Jenkins pipeline.\\"}"
+                                CREATED_PR_URL=$(curl -fsSL -X POST \
+                                  -H "$AUTH_HEADER" \
+                                  -H "$ACCEPT_HEADER" \
+                                  "$API_URL/pulls" \
+                                  -d "$PAYLOAD" \
+                                  | sed -n 's/.*"html_url":"\\([^"]*\\)".*/\\1/p' | head -n 1)
+
+                                if [ -z "$CREATED_PR_URL" ]; then
+                                    echo "❌ PR 생성 실패: token 권한(Pull requests: Read and write, Contents: Read and write)과 repo 접근 권한을 확인하세요."
+                                    exit 1
+                                fi
+
+                                echo "✅ PR 생성 완료: $CREATED_PR_URL"
+                            '''
+                        }
+                    }
                 }
             }
         }
