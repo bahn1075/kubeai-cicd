@@ -38,3 +38,15 @@ catalog:
     resourceProfile: amd-gpu-rx9070xt:1
     targetRequests: 64
     # cacheProfile: model-cache-80gb  # hostPath jsonPatch로 대체
+
+  test1:
+    enabled: true
+    features: ["TextGeneration"]
+    url: "ollama://qwen3:0.6b"
+    engine: OLlama
+    env:
+      OLLAMA_KEEP_ALIVE: "1"
+      OLLAMA_MAX_LOADED_MODELS: "2"
+      OLLAMA_FLASH_ATTENTION: "true"
+    minReplicas: 1
+    resourceProfile: amd-gpu-rx9070xt:1
