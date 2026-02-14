@@ -42,7 +42,7 @@ catalog:
   test1:
     enabled: true
     features: ["TextGeneration"]
-    url: "ollama://qwen3:4b"
+    url: "ollama://qwen3:8b"
     engine: OLlama
     env:
       OLLAMA_KEEP_ALIVE: "1"
