@@ -235,17 +235,31 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIALS_ID, usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                         withEnv(["BRANCH_NAME=${branchName}"]) {
                             sh '''
-                                set -e
+                                set -eu
                                 API_URL="https://api.github.com/repos/$REPO_OWNER/$REPO_NAME"
-                                AUTH_HEADER="Authorization: token $GIT_PASSWORD"
+                                AUTH_HEADER="Authorization: Bearer $GIT_PASSWORD"
                                 ACCEPT_HEADER="Accept: application/vnd.github+json"
+                                API_VERSION_HEADER="X-GitHub-Api-Version: 2022-11-28"
+
+                                extract_html_url() {
+                                  sed -n 's/.*"html_url"[[:space:]]*:[[:space:]]*"\\([^"]*\\)".*/\\1/p' "$1" | head -n 1
+                                }
 
                                 # 이미 열려 있는 PR이 있으면 재사용
-                                EXISTING_PR_URL=$(curl -fsSL \
+                                EXISTING_PR_RESPONSE=$(mktemp)
+                                EXISTING_HTTP_CODE=$(curl -sS -o "$EXISTING_PR_RESPONSE" -w "%{http_code}" \
                                   -H "$AUTH_HEADER" \
                                   -H "$ACCEPT_HEADER" \
-                                  "$API_URL/pulls?state=open&head=$REPO_OWNER:$BRANCH_NAME&base=$BASE_BRANCH" \
-                                  | sed -n 's/.*"html_url":"\\([^"]*\\)".*/\\1/p' | head -n 1)
+                                  -H "$API_VERSION_HEADER" \
+                                  "$API_URL/pulls?state=open&head=$REPO_OWNER:$BRANCH_NAME&base=$BASE_BRANCH")
+                                if [ "$EXISTING_HTTP_CODE" -ge 400 ]; then
+                                    echo "❌ 기존 PR 조회 실패 (HTTP $EXISTING_HTTP_CODE)"
+                                    cat "$EXISTING_PR_RESPONSE"
+                                    rm -f "$EXISTING_PR_RESPONSE"
+                                    exit 1
+                                fi
+                                EXISTING_PR_URL=$(extract_html_url "$EXISTING_PR_RESPONSE")
+                                rm -f "$EXISTING_PR_RESPONSE"
 
                                 if [ -n "$EXISTING_PR_URL" ]; then
                                     echo "🔁 기존 PR 재사용: $EXISTING_PR_URL"
@@ -253,15 +267,25 @@ pipeline {
                                 fi
 
                                 PAYLOAD="{\\"title\\":\\"Merge $BRANCH_NAME into $BASE_BRANCH\\",\\"head\\":\\"$BRANCH_NAME\\",\\"base\\":\\"$BASE_BRANCH\\",\\"body\\":\\"Auto-created by Jenkins pipeline.\\"}"
-                                CREATED_PR_URL=$(curl -fsSL -X POST \
+                                CREATED_PR_RESPONSE=$(mktemp)
+                                CREATED_HTTP_CODE=$(curl -sS -o "$CREATED_PR_RESPONSE" -w "%{http_code}" -X POST \
                                   -H "$AUTH_HEADER" \
                                   -H "$ACCEPT_HEADER" \
+                                  -H "$API_VERSION_HEADER" \
                                   "$API_URL/pulls" \
                                   -d "$PAYLOAD" \
-                                  | sed -n 's/.*"html_url":"\\([^"]*\\)".*/\\1/p' | head -n 1)
+                                  )
+                                if [ "$CREATED_HTTP_CODE" -ge 400 ]; then
+                                    echo "❌ PR 생성 실패 (HTTP $CREATED_HTTP_CODE)"
+                                    cat "$CREATED_PR_RESPONSE"
+                                    rm -f "$CREATED_PR_RESPONSE"
+                                    exit 1
+                                fi
+                                CREATED_PR_URL=$(extract_html_url "$CREATED_PR_RESPONSE")
+                                rm -f "$CREATED_PR_RESPONSE"
 
                                 if [ -z "$CREATED_PR_URL" ]; then
-                                    echo "❌ PR 생성 실패: token 권한(Pull requests: Read and write, Contents: Read and write)과 repo 접근 권한을 확인하세요."
+                                    echo "❌ PR 생성 응답에서 html_url을 찾지 못했습니다. token 권한과 API 응답을 확인하세요."
                                     exit 1
                                 fi
 
