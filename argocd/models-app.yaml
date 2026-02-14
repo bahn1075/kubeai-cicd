@@ -19,3 +19,5 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - AllowEmpty=true
+      - Replace=true
+      - Force=true
