@@ -9,6 +9,9 @@ spec:
     repoURL: https://github.com/bahn1075/kubeai-cicd.git
     targetRevision: main
     path: kubeai
+    helm:
+      valueFiles:
+        - values.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: kubeai
