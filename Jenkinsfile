@@ -1,58 +1,67 @@
-pipeline {
-    agent any
-
-    parameters {
+properties([
+    parameters([
         string(
             name: 'PROJECT_NAME',
             defaultValue: 'test1',
             description: 'project name (main branch에서 분기될 branch명으로 사용)',
             trim: true
-        )
+        ),
         choice(
             name: 'SERVICE_TYPE',
             choices: ['TextGeneration', 'TextEmbedding', 'Reranking', 'SpeechToText'],
             description: 'service type'
-        )
+        ),
         choice(
             name: 'LLM_SERVE',
-            choices: ['Ollama', 'vLLM'],
+            choices: ['ollama', 'vLLM'],
             description: 'LLM serve'
-        )
-        choice(
+        ),
+        [
+            $class: 'CascadeChoiceParameter',
+            choiceType: 'PT_SINGLE_SELECT',
+            description: 'LLM model (LLM_SERVE 선택값에 따라 자동 변경)',
+            filterLength: 1,
+            filterable: false,
             name: 'LLM_MODEL',
-            choices: [
-                'ollama://qwen3:0.6b',
-                'ollama://qwen3:4b',
-                'ollama://qwen3:8b',
-                'ollama://qwen3:14b',
-                'ollama://qwen3:32b',
-                'ollama://llama3.1:8b',
-                'ollama://llama3.1:70b',
-                'ollama://gemma3:4b',
-                'ollama://gemma3:12b',
-                'ollama://gemma3:27b',
-                'ollama://deepseek-r1:7b',
-                'ollama://deepseek-r1:14b',
-                'ollama://mistral:7b',
-                'ollama://phi4:14b',
-                'hf://Qwen/Qwen3-0.6B',
-                'hf://Qwen/Qwen3-4B',
-                'hf://Qwen/Qwen3-8B',
-                'hf://Qwen/Qwen3-14B',
-                'hf://Qwen/Qwen3-32B',
-                'hf://meta-llama/Llama-3.1-8B-Instruct',
-                'hf://meta-llama/Llama-3.1-70B-Instruct',
-                'hf://google/gemma-3-4b-it',
-                'hf://google/gemma-3-12b-it',
-                'hf://google/gemma-3-27b-it',
-                'hf://deepseek-ai/DeepSeek-R1-Distill-Qwen-7B',
-                'hf://deepseek-ai/DeepSeek-R1-Distill-Qwen-14B',
-                'hf://mistralai/Mistral-7B-Instruct-v0.3',
-                'hf://microsoft/phi-4'
-            ],
-            description: 'LLM model (정확한 모델명을 입력해야 합니다)'
-        )
-    }
+            randomName: 'llm-model-choice',
+            referencedParameters: 'LLM_SERVE',
+            script: [
+                $class: 'GroovyScript',
+                fallbackScript: [
+                    classpath: [],
+                    sandbox: true,
+                    script: "return ['LLM_MODEL 목록을 불러오지 못했습니다.']"
+                ],
+                script: [
+                    classpath: [],
+                    sandbox: true,
+                    script: """
+                        if (LLM_SERVE == 'ollama') {
+                            return [
+                                'ollama://exaone3.5',
+                                'ollama://qwen3:4b',
+                                'ollama://qwen3:8b',
+                                'ollama://qwen3:14b'
+                            ]
+                        }
+                        if (LLM_SERVE == 'vLLM') {
+                            return [
+                                'hf://Qwen/Qwen3-0.6B',
+                                'hf://Qwen/Qwen3-4B',
+                                'hf://Qwen/Qwen3-8B',
+                                'hf://Qwen/Qwen3-14B'
+                            ]
+                        }
+                        return ['먼저 LLM_SERVE를 선택하세요.']
+                    """
+                ]
+            ]
+        ]
+    ])
+])
+
+pipeline {
+    agent any
 
     environment {
         REPO_URL = 'https://github.com/bahn1075/kubeai-cicd.git'
@@ -71,8 +80,8 @@ pipeline {
                         error "PROJECT_NAME은 필수 입력값입니다."
                     }
                     // serve 타입과 모델 URL prefix 일관성 검증
-                    if (params.LLM_SERVE == 'Ollama' && !params.LLM_MODEL.startsWith('ollama://')) {
-                        error "Ollama serve 타입에는 ollama:// 모델을 선택해야 합니다."
+                    if (params.LLM_SERVE == 'ollama' && !params.LLM_MODEL.startsWith('ollama://')) {
+                        error "ollama serve 타입에는 ollama:// 모델을 선택해야 합니다."
                     }
                     if (params.LLM_SERVE == 'vLLM' && !params.LLM_MODEL.startsWith('hf://')) {
                         error "vLLM serve 타입에는 hf:// 모델을 선택해야 합니다."
@@ -121,7 +130,7 @@ pipeline {
                     def llmModel = params.LLM_MODEL
                     def modelBlock = ""
 
-                    if (llmServe == 'Ollama') {
+                    if (llmServe == 'ollama') {
                         modelBlock = """
   ${projectName}:
     enabled: true
