@@ -38,6 +38,7 @@ properties([
                     script: """
                         if (LLM_SERVE == 'ollama') {
                             return [
+                                'ollama://bge-m3',
                                 'ollama://exaone3.5',
                                 'ollama://qwen3:4b',
                                 'ollama://qwen3:8b',
