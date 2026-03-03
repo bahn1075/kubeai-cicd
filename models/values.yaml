@@ -40,7 +40,7 @@ catalog:
     cacheProfile: model-cache-80gb
 
   exaone3.5:
-    enabled: true
+    enabled: false
     features: ["TextGeneration"]
     url: "ollama://exaone3.5:7.8b"
     engine: OLlama
