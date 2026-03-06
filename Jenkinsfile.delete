@@ -182,8 +182,55 @@ pipeline {
                         returnStdout: true
                     ).trim()
 
+                    // PR Body 작성
+                    def prBody = ""
+                    if (originalBranchExists == '1') {
+                        prBody = """## 🗑️ 프로젝트 삭제 요청
+
+### 삭제 대상
+- **프로젝트**: `${projectName}`
+
+### 삭제 항목
+- Kong Service: `kong/services/${projectName}.yaml`
+- Model Config: `models/values.yaml` 내 `${projectName}` 블럭
+- Git Branch: `${projectName}` (이미 삭제됨)
+
+### ⚠️ 주의사항
+**이 PR을 머지하면 다음이 실행됩니다:**
+1. Kong 서비스 삭제
+2. Model Config 삭제 → Pod 자동 종료
+
+---
+**Auto-created by Jenkins Delete Pipeline**"""
+                    } else {
+                        prBody = """## 🗑️ 프로젝트 삭제 요청
+
+### 삭제 대상
+- **프로젝트**: `${projectName}`
+
+### 삭제 항목
+- Kong Service: `kong/services/${projectName}.yaml`
+- Model Config: `models/values.yaml` 내 `${projectName}` 블럭
+
+### ℹ️ 참고
+원본 브랜치 `${projectName}`는 이미 존재하지 않습니다.
+
+---
+**Auto-created by Jenkins Delete Pipeline**"""
+                    }
+
+                    // JSON payload 파일 생성
+                    def prTitle = "Delete project: ${projectName}"
+                    def jsonPayload = groovy.json.JsonOutput.toJson([
+                        title: prTitle,
+                        head: deleteBranch,
+                        base: env.BASE_BRANCH,
+                        body: prBody
+                    ])
+                    writeFile file: 'pr-payload.json', text: jsonPayload
+
                     withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIALS_ID, usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
-                        withEnv(["BRANCH_NAME=${deleteBranch}", "PROJECT_NAME=${projectName}", "ORIGINAL_BRANCH_EXISTS=${originalBranchExists}"]) {
+                        withEnv(["BRANCH_NAME=${deleteBranch}"]) {
                             sh '''
                                 set -eu
                                 API_URL="https://api.github.com/repos/$REPO_OWNER/$REPO_NAME"
@@ -216,22 +263,16 @@ pipeline {
                                     exit 0
                                 fi
 
-                                # PR body 작성
-                                if [ "$ORIGINAL_BRANCH_EXISTS" = "1" ]; then
-                                    PR_BODY="## 🗑️ 프로젝트 삭제 요청\\n\\n### 삭제 대상\\n- **프로젝트**: \`${PROJECT_NAME}\`\\n\\n### 삭제 항목\\n- Kong Service: \`kong/services/${PROJECT_NAME}.yaml\`\\n- Model Config: \`models/values.yaml\` 내 \`${PROJECT_NAME}\` 블럭\\n- Git Branch: \`${PROJECT_NAME}\` (PR 머지 후 자동 삭제)\\n\\n### ⚠️ 주의사항\\n**이 PR을 머지하면 다음이 실행됩니다:**\\n1. Kong 서비스 삭제\\n2. Model Config 삭제 → Pod 자동 종료\\n3. 원본 브랜치 \`${PROJECT_NAME}\` 삭제\\n\\n---\\n**Auto-created by Jenkins Delete Pipeline**"
-                                else
-                                    PR_BODY="## 🗑️ 프로젝트 삭제 요청\\n\\n### 삭제 대상\\n- **프로젝트**: \`${PROJECT_NAME}\`\\n\\n### 삭제 항목\\n- Kong Service: \`kong/services/${PROJECT_NAME}.yaml\`\\n- Model Config: \`models/values.yaml\` 내 \`${PROJECT_NAME}\` 블럭\\n\\n### ℹ️ 참고\\n원본 브랜치 \`${PROJECT_NAME}\`는 이미 존재하지 않습니다.\\n\\n---\\n**Auto-created by Jenkins Delete Pipeline**"
-                                fi
-
-                                PAYLOAD="{\\"title\\":\\"Delete project: ${PROJECT_NAME}\\",\\"head\\":\\"$BRANCH_NAME\\",\\"base\\":\\"$BASE_BRANCH\\",\\"body\\":\\"$PR_BODY\\"}"
+                                # PR 생성
                                 CREATED_PR_RESPONSE=$(mktemp)
                                 CREATED_HTTP_CODE=$(curl -sS -o "$CREATED_PR_RESPONSE" -w "%{http_code}" -X POST \
                                   -H "$AUTH_HEADER" \
                                   -H "$ACCEPT_HEADER" \
                                   -H "$API_VERSION_HEADER" \
+                                  -H "Content-Type: application/json" \
                                   "$API_URL/pulls" \
-                                  -d "$PAYLOAD" \
-                                  )
+                                  -d @pr-payload.json)
+                                  
                                 if [ "$CREATED_HTTP_CODE" -ge 400 ]; then
                                     echo "❌ PR 생성 실패 (HTTP $CREATED_HTTP_CODE)"
                                     cat "$CREATED_PR_RESPONSE"
