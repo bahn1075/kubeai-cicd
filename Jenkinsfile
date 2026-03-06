@@ -192,6 +192,58 @@ pipeline {
             }
         }
 
+        stage('Generate Kong Service') {
+            steps {
+                script {
+                    def projectName = params.PROJECT_NAME.trim()
+                    def llmServe = params.LLM_SERVE
+                    def engineSuffix = llmServe.toLowerCase()
+                    def serviceFile = "kong/services/${projectName}.yaml"
+
+                    def kongServiceYaml = """apiVersion: v1
+kind: Service
+metadata:
+  name: ${projectName}-${engineSuffix}
+  namespace: kubeai
+spec:
+  selector:
+    model: ${projectName}
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ${projectName}-${engineSuffix}
+  namespace: kubeai
+  annotations:
+    konghq.com/strip-path: "true"
+spec:
+  ingressClassName: kong
+  rules:
+    - http:
+        paths:
+          - path: /${projectName}
+            pathType: Prefix
+            backend:
+              service:
+                name: ${projectName}-${engineSuffix}
+                port:
+                  number: 8000
+"""
+
+                    // Kong 서비스 파일 생성 또는 덮어쓰기
+                    writeFile file: serviceFile, text: kongServiceYaml
+                    echo "✅ Kong 서비스 파일 생성 완료: ${serviceFile}"
+                    
+                    echo "\n📄 생성된 Kong Service:"
+                    sh "cat ${serviceFile}"
+                }
+            }
+        }
+
         stage('Commit & Push') {
             steps {
                 script {
