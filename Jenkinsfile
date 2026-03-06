@@ -1,5 +1,21 @@
 properties([
     parameters([
+        booleanParam(
+            name: 'ENABLE_DELETE',
+            defaultValue: false,
+            description: '🗑️ 프로젝트 삭제 모드 활성화 (체크 시 아래 DELETE_BRANCH만 처리)'
+        ),
+        gitParameter(
+            name: 'DELETE_BRANCH',
+            type: 'PT_BRANCH',
+            defaultValue: '',
+            description: '삭제할 브랜치 선택 (ENABLE_DELETE=true 일 때만 사용)',
+            branchFilter: 'origin/(?!main$).*',
+            sortMode: 'ASCENDING',
+            selectedValue: 'DEFAULT',
+            useRepository: 'https://github.com/bahn1075/kubeai-cicd.git',
+            quickFilterEnabled: true
+        ),
         string(
             name: 'PROJECT_NAME',
             defaultValue: 'test1',
@@ -74,7 +90,85 @@ pipeline {
     }
 
     stages {
+        stage('Delete Project Branch') {
+            when {
+                expression { return params.ENABLE_DELETE == true }
+            }
+            steps {
+                script {
+                    def branchToDelete = params.DELETE_BRANCH?.trim()
+                    
+                    if (!branchToDelete) {
+                        error "❌ 삭제할 브랜치를 선택하세요."
+                    }
+                    
+                    // origin/ prefix 제거
+                    branchToDelete = branchToDelete.replaceAll('^origin/', '')
+                    
+                    // 보호된 브랜치 체크
+                    if (branchToDelete == 'main' || branchToDelete == 'master' || branchToDelete == env.BASE_BRANCH) {
+                        error "❌ 보호된 브랜치(${branchToDelete})는 삭제할 수 없습니다."
+                    }
+                    
+                    echo "🗑️ 브랜치 삭제 시작: ${branchToDelete}"
+                    
+                    // Git checkout
+                    git branch: 'main', credentialsId: env.GIT_CREDENTIALS_ID, url: env.REPO_URL
+                    
+                    withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIALS_ID, usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                        withEnv(["BRANCH_TO_DELETE=${branchToDelete}"]) {
+                            sh '''
+                                set -e
+                                git config user.email "jenkins@kubeai-cicd"
+                                git config user.name "Jenkins Pipeline"
+                                
+                                # Jenkins credential username이 이메일인 경우 user 부분만 추출
+                                PUSH_USER="${GIT_USERNAME%@*}"
+                                if [ -z "$PUSH_USER" ]; then
+                                    PUSH_USER="$GIT_USERNAME"
+                                fi
+                                
+                                # remote branch 존재 확인
+                                if git ls-remote --heads origin "$BRANCH_TO_DELETE" | grep -q "$BRANCH_TO_DELETE"; then
+                                    echo "🌿 Remote 브랜치 삭제 중: origin/$BRANCH_TO_DELETE"
+                                    if ! git -c credential.username="$PUSH_USER" -c credential.helper='!f() { echo "password=$GIT_PASSWORD"; }; f' push origin --delete "$BRANCH_TO_DELETE"; then
+                                        echo "❌ Remote 브랜치 삭제 실패"
+                                        exit 1
+                                    fi
+                                    echo "✅ Remote 브랜치 삭제 완료: origin/$BRANCH_TO_DELETE"
+                                else
+                                    echo "⚠️ Remote 브랜치가 존재하지 않습니다: origin/$BRANCH_TO_DELETE"
+                                fi
+                                
+                                # local branch 존재 시 삭제
+                                if git show-ref --verify --quiet "refs/heads/$BRANCH_TO_DELETE"; then
+                                    echo "🌿 Local 브랜치 삭제 중: $BRANCH_TO_DELETE"
+                                    git branch -D "$BRANCH_TO_DELETE"
+                                    echo "✅ Local 브랜치 삭제 완료: $BRANCH_TO_DELETE"
+                                fi
+                            '''
+                        }
+                    }
+                    
+                    echo """
+                    ╔══════════════════════════════════════════╗
+                    ║     ✅ 브랜치 삭제 완료!                 ║
+                    ╠══════════════════════════════════════════╣
+                    ║  Deleted : ${branchToDelete}             
+                    ╚══════════════════════════════════════════╝
+                    """
+                    
+                    // 삭제 모드에서는 다른 stage를 실행하지 않음
+                    currentBuild.result = 'SUCCESS'
+                    return
+                }
+            }
+        }
+
         stage('Validate Parameters') {
+            when {
+                expression { return params.ENABLE_DELETE != true }
+            }
             steps {
                 script {
                     if (!params.PROJECT_NAME?.trim()) {
@@ -97,6 +191,9 @@ pipeline {
         }
 
         stage('Checkout & Branch') {
+            when {
+                expression { return params.ENABLE_DELETE != true }
+            }
             steps {
                 script {
                     // main 체크아웃
@@ -123,6 +220,9 @@ pipeline {
         }
 
         stage('Generate Model Config') {
+            when {
+                expression { return params.ENABLE_DELETE != true }
+            }
             steps {
                 script {
                     def projectName = params.PROJECT_NAME.trim()
@@ -193,6 +293,9 @@ pipeline {
         }
 
         stage('Commit & Push') {
+            when {
+                expression { return params.ENABLE_DELETE != true }
+            }
             steps {
                 script {
                     def branchName = params.PROJECT_NAME.trim()
@@ -234,6 +337,9 @@ pipeline {
         }
 
         stage('Create Merge Request') {
+            when {
+                expression { return params.ENABLE_DELETE != true }
+            }
             steps {
                 script {
                     def branchName = params.PROJECT_NAME.trim()
