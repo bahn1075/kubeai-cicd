@@ -77,6 +77,7 @@ pipeline {
                 script {
                     def projectName = params.PROJECT_NAME.trim()
                     def serviceFile = "kong/services/${projectName}.yaml"
+                    def servicesDir = "kong/services"
                     
                     echo "🗑️ Kong 서비스 파일 삭제: ${serviceFile}"
                     
@@ -85,6 +86,17 @@ pipeline {
                     if (fileExists) {
                         sh "rm -f ${serviceFile}"
                         echo "✅ Kong 서비스 파일 삭제 완료"
+                        
+                        // 디렉토리가 비어있으면 .gitkeep 생성 (디렉토리 유지)
+                        def remainingFiles = sh(
+                            script: "find ${servicesDir} -maxdepth 1 -type f -name '*.yaml' | wc -l",
+                            returnStdout: true
+                        ).trim()
+                        
+                        if (remainingFiles == '0') {
+                            echo "ℹ️ kong/services 디렉토리가 비어있습니다. .gitkeep 파일 생성"
+                            sh "touch ${servicesDir}/.gitkeep"
+                        }
                     } else {
                         echo "ℹ️ Kong 서비스 파일이 존재하지 않습니다: ${serviceFile}"
                     }
