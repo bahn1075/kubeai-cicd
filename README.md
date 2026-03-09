@@ -244,6 +244,35 @@ Jenkins에서 GitHub 인증을 위해 `github` credential 필요:
 2. Jenkins Credential 업데이트
 3. 파이프라인 재실행
 
+### ArgoCD 자동 Prune 실패 (Model 삭제 안됨)
+**증상:** 
+- Delete 파이프라인 실행 후 모델 블럭이 `values.yaml`에서 삭제됨
+- ArgoCD가 변경사항을 감지하고 Sync 수행
+- 하지만 Model Pod가 자동으로 삭제되지 않음
+- Warning 발생 후, 수동으로 Prune 체크 → Sync해야만 삭제됨
+
+**원인:** 
+- `Model`은 Custom Resource (CR)이며, ArgoCD는 기본적으로 CR을 자동 prune하지 않음
+- 안전성을 위한 설계 (CR 삭제가 연관 리소스에 영향을 줄 수 있음)
+
+**해결:** 
+ArgoCD Application manifest에 `PruneLast=true` syncOption 추가 (이미 적용됨):
+```yaml
+syncPolicy:
+  automated:
+    prune: true
+    selfHeal: true
+  syncOptions:
+    - PruneLast=true  # CR을 마지막에 prune
+    - RespectIgnoreDifferences=true
+```
+
+**적용 방법:**
+```bash
+kubectl apply -f argocd/models-app.yaml
+# 또는 ArgoCD UI에서 Application 재생성
+```
+
 ## 📚 참고 문서
 
 - [KubeAI 공식 문서](https://www.kubeai.org/)
