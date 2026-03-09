@@ -41,14 +41,3 @@ catalog:
 
 
 
-  bge-m3:
-    enabled: true
-    features: ["TextEmbedding"]
-    url: "ollama://bge-m3"
-    engine: OLlama
-    env:
-      OLLAMA_KEEP_ALIVE: "1"
-      OLLAMA_MAX_LOADED_MODELS: "2"
-      OLLAMA_FLASH_ATTENTION: "true"
-    minReplicas: 1
-    resourceProfile: amd-gpu-rx9070xt:1
