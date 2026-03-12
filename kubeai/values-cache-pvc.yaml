@@ -34,7 +34,7 @@ modelServerPersistentCache:
     size: 150Gi
   ollama:
     claimName: kubeai-ollama-cache
-    size: 150Gi
+    size: 50Gi
 
 cacheProfiles:
   model-cache-150gb:

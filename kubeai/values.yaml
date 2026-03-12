@@ -113,7 +113,7 @@ modelServerPersistentCache:
     size: 150Gi
   ollama:
     claimName: kubeai-ollama-cache
-    size: 150Gi
+    size: 50Gi
 
 modelRollouts:
   # The number of replicas to add when rolling out a new model.

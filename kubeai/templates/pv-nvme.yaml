@@ -24,7 +24,7 @@ metadata:
   name: kubeai-ollama-cache-pv
 spec:
   capacity:
-    storage: 150Gi
+    storage: 50Gi
   volumeMode: Filesystem
   accessModes:
     - ReadWriteOnce
