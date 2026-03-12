@@ -22,7 +22,5 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - AllowEmpty=true
-      - Replace=true
-      - Force=true
       - PruneLast=true  # Custom Resource를 마지막에 prune (중요!)
       - RespectIgnoreDifferences=true
