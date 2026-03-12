@@ -238,12 +238,12 @@ resourceProfiles:
         value: "present"
         effect: "NoSchedule"
 ## 사용자가 정의 후 추가
-  amd-gpu-rx9070xt:
-    imageName: "amd-gpu"
+  nvidia-gpu-a10g:
+    imageName: "nvidia-gpu"
     limits:
-      amd.com/gpu: "1"
+      nvidia.com/gpu: "1"
     tolerations:
-      - key: "amd.com/gpu"
+      - key: "nvidia.com/gpu"
         operator: "Equal"
         value: "present"
         effect: "NoSchedule"
