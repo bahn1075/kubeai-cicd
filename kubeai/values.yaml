@@ -102,6 +102,18 @@ modelServerPods:
     value:
       name: ollama-cache
       mountPath: /root/.ollama
+  - op: add
+    path: /spec/volumes/-
+    value:
+      name: dshm
+      emptyDir:
+        medium: Memory
+        sizeLimit: 4Gi
+  - op: add
+    path: /spec/containers/0/volumeMounts/-
+    value:
+      name: dshm
+      mountPath: /dev/shm
 
 modelServerPersistentCache:
   enabled: true
