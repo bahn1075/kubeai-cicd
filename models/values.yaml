@@ -39,7 +39,7 @@ catalog:
     cacheProfile: model-cache-150gb
 
   exaone3-5-ollama:
-    enabled: true
+    enabled: false
     features: ["TextGeneration"]
     url: "ollama://exaone3.5:latest"
     engine: OLlama
@@ -49,3 +49,26 @@ catalog:
       OLLAMA_FLASH_ATTENTION: "true" # Enable Flash Attention
     minReplicas: 1
     resourceProfile: nvidia-gpu-a10g:1
+
+  qwen3-5-9b-base-vllm:
+    enabled:  true
+    features: [TextGeneration]
+    url: hf://Qwen/Qwen3.5-9B-Base
+    engine: VLLM
+    # env:
+    #   HIP_FORCE_DEV_KERNARG: "1"
+    #   NCCL_MIN_NCHANNELS: "112"
+    #   TORCH_BLAS_PREFER_HIPBLASLT: "1"
+    #   VLLM_USE_TRITON_FLASH_ATTN: "0"
+    #   VLLM_FP8_PADDING: "0"
+    # args:
+    #   - --trust-remote-code
+    #   - --max-model-len=8192
+    #   - --max-num-batched-tokens=4096
+    #   - --max-num-seqs=64
+    #   - --tensor-parallel-size=1
+    #   - --enforce-eager  # CUDA graph 컴파일 비활성화 - startup CPU 스파이크 방지
+    #   # - --gpu-memory-utilization=0.8
+    minReplicas: 1
+    resourceProfile: nvidia-gpu-a10g:1
+    cacheProfile: model-cache-150gb    
