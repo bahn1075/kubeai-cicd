@@ -15,9 +15,9 @@ catalog:
     resourceProfile: nvidia-gpu-a10g:1
 
   qwen3-4b-vllm:
-    enabled:  false
+    enabled:  true
     features: [TextGeneration]
-    url: hf://Qwen/Qwen3-4B
+    url: hf://Qwen/Qwen3.5-9B-Base
     engine: VLLM
     env:
       # VLLM_ROCM_USE_AITER: "0"  # AITER 비활성화 - gfx1201 호환
