@@ -14,7 +14,7 @@ catalog:
     minReplicas: 1
     resourceProfile: nvidia-gpu-a10g:1
 
-  qwen3-4b-vllm:
+  qwen3-5-9b-base-vllm:
     enabled:  true
     features: [TextGeneration]
     url: hf://Qwen/Qwen3.5-9B-Base
