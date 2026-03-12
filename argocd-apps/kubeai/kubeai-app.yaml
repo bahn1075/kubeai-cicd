@@ -7,7 +7,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/bahn1075/kubeai-cicd.git
-    targetRevision: main
+    targetRevision: a10g
     path: kubeai
     helm:
       valueFiles:

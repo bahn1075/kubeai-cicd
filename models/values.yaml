@@ -12,7 +12,7 @@ catalog:
       OLLAMA_MAX_LOADED_MODELS: "2"
       OLLAMA_FLASH_ATTENTION: "true" # Enable Flash Attention
     minReplicas: 1
-    resourceProfile: amd-gpu-rx9070xt:1
+    resourceProfile: nvidia-gpu-a10g:1
 
   qwen3-4b-vllm:
     enabled:  false
@@ -35,22 +35,6 @@ catalog:
       - --tensor-parallel-size=1
       # - --gpu-memory-utilization=0.8 # 0.6 지정시 에러 발생 0.7 성공 vram 12G
     minReplicas: 1
-    resourceProfile: amd-gpu-rx9070xt:1
+    resourceProfile: nvidia-gpu-a10g:1
     targetRequests: 64
     cacheProfile: model-cache-80gb
-
-
-
-
-
-  exaone3.5:
-    enabled: true
-    features: ["TextGeneration"]
-    url: "ollama://exaone3.5"
-    engine: OLlama
-    env:
-      OLLAMA_KEEP_ALIVE: "1"
-      OLLAMA_MAX_LOADED_MODELS: "2"
-      OLLAMA_FLASH_ATTENTION: "true"
-    minReplicas: 1
-    resourceProfile: amd-gpu-rx9070xt:1
