@@ -38,7 +38,7 @@ catalog:
     targetRequests: 64
     cacheProfile: model-cache-150gb
 
-  qwen3-06b-gpu:
+  qwen3-5-9b-ollama:
     enabled: true
     features: ["TextGeneration"]
     url: "ollama://qwen3.5:9b"
