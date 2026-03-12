@@ -105,15 +105,15 @@ modelServerPods:
 
 modelServerPersistentCache:
   enabled: true
-  storageClassName: "nfs-rwx"
+  storageClassName: ""
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   hf:
     claimName: kubeai-hf-cache
-    size: 80Gi
+    size: 150Gi
   ollama:
     claimName: kubeai-ollama-cache
-    size: 80Gi
+    size: 150Gi
 
 modelRollouts:
   # The number of replicas to add when rolling out a new model.
@@ -248,10 +248,9 @@ resourceProfiles:
         value: "present"
         effect: "NoSchedule"
 cacheProfiles:
-  model-cache-80gb:
+  model-cache-150gb:
     sharedFilesystem:
-      storageClassName: "nfs-rwx"
-      size: "80Gi"
+      size: "150Gi"
 
 modelAutoscaling:
   # Interval that the autoscaler will scrape model server metrics.

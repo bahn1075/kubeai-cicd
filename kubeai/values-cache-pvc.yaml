@@ -26,18 +26,17 @@ modelServerPods:
 
 modelServerPersistentCache:
   enabled: true
-  storageClassName: "nfs-rwx"
+  storageClassName: ""
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   hf:
     claimName: kubeai-hf-cache
-    size: 80Gi
+    size: 150Gi
   ollama:
     claimName: kubeai-ollama-cache
-    size: 80Gi
+    size: 150Gi
 
 cacheProfiles:
-  model-cache-80gb:
+  model-cache-150gb:
     sharedFilesystem:
-      storageClassName: "nfs-rwx"
-      size: "80Gi"
+      size: "150Gi"

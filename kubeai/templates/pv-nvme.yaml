@@ -1,0 +1,38 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: kubeai-hf-cache-pv
+spec:
+  capacity:
+    storage: 150Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  hostPath:
+    path: /data/hf-cache
+    type: DirectoryOrCreate
+  claimRef:
+    namespace: kubeai
+    name: kubeai-hf-cache
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: kubeai-ollama-cache-pv
+spec:
+  capacity:
+    storage: 150Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  hostPath:
+    path: /data/ollama-cache
+    type: DirectoryOrCreate
+  claimRef:
+    namespace: kubeai
+    name: kubeai-ollama-cache
