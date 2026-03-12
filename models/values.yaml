@@ -20,7 +20,6 @@ catalog:
     url: hf://Qwen/Qwen3.5-2B-Base
     engine: VLLM
     env:
-      # VLLM_ROCM_USE_AITER: "0"  # AITER 비활성화 - gfx1201 호환
       HIP_FORCE_DEV_KERNARG: "1"
       NCCL_MIN_NCHANNELS: "112"
       TORCH_BLAS_PREFER_HIPBLASLT: "1"
@@ -28,12 +27,12 @@ catalog:
       VLLM_FP8_PADDING: "0"
     args:
       - --trust-remote-code
-      # Reduced parameters for 16GB VRAM to avoid KV cache issues
       - --max-model-len=8192
       - --max-num-batched-tokens=4096
       - --max-num-seqs=64
       - --tensor-parallel-size=1
-      # - --gpu-memory-utilization=0.8 # 0.6 지정시 에러 발생 0.7 성공 vram 12G
+      - --enforce-eager  # CUDA graph 컴파일 비활성화 - startup CPU 스파이크 방지
+      # - --gpu-memory-utilization=0.8
     minReplicas: 1
     resourceProfile: nvidia-gpu-a10g:1
     targetRequests: 64
