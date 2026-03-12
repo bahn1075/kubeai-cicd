@@ -62,12 +62,12 @@ catalog:
     # e.g. KubeAI/클러스터 설정에서 memory: "14Gi"
     args:
       # - --trust-remote-code
-      # - --max-model-len=8192            # 또는 16384
-      # - --max-num-batched-tokens=1024   # 또는 2048
-      # - --max-num-seqs=32               # 동시 시퀀스 제한
-      # - --gpu-memory-utilization=0.80
+      - --max-model-len=8192            # 또는 16384
+      - --max-num-batched-tokens=1024   # 또는 2048
+      - --max-num-seqs=32               # 동시 시퀀스 제한
+      - --gpu-memory-utilization=0.80
       - --language-model-only           # 비전 인코더/프로파일링 비활성화
-      # - --enforce-eager                 # 초기 피크 완화
+      - --enforce-eager                 # 초기 피크 완화
     # 필요 시 환경변수
     env:
       # 초기화/컴파일 변동성 줄이기용 선택사항
