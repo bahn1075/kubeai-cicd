@@ -3,7 +3,7 @@ all:
 
 catalog:
   qwen3-06b-gpu:
-    enabled: true
+    enabled: false
     features: ["TextGeneration"]
     url: "ollama://qwen3:0.6b"
     engine: OLlama
@@ -37,3 +37,15 @@ catalog:
     resourceProfile: nvidia-gpu-a10g:1
     targetRequests: 64
     cacheProfile: model-cache-150gb
+
+  qwen3-06b-gpu:
+    enabled: true
+    features: ["TextGeneration"]
+    url: "ollama://qwen3.5:9b"
+    engine: OLlama
+    env:
+      OLLAMA_KEEP_ALIVE: "1" # Keep the model loaded in memory
+      OLLAMA_MAX_LOADED_MODELS: "2"
+      OLLAMA_FLASH_ATTENTION: "true" # Enable Flash Attention
+    minReplicas: 1
+    resourceProfile: nvidia-gpu-a10g:1
