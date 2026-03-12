@@ -38,10 +38,10 @@ catalog:
     targetRequests: 64
     cacheProfile: model-cache-150gb
 
-  qwen3-5-9b-ollama:
+  exaone3-5-ollama:
     enabled: true
     features: ["TextGeneration"]
-    url: "ollama://qwen3.5:9b"
+    url: "ollama://exaone3.5:latest"
     engine: OLlama
     env:
       OLLAMA_KEEP_ALIVE: "1" # Keep the model loaded in memory
