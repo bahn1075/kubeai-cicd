@@ -113,9 +113,11 @@ modelServerPersistentCache:
     - ReadWriteOnce
   hf:
     claimName: kubeai-hf-cache
+    storageClassName: "standard"
     size: 150Gi
   ollama:
     claimName: kubeai-ollama-cache
+    storageClassName: ""
     size: 50Gi
 
 modelRollouts:
