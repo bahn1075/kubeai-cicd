@@ -7,7 +7,7 @@ spec:
   project: default
   sources:
     - repoURL: https://github.com/BerriAI/litellm.git
-      targetRevision: a10g
+      targetRevision: main
       path: deploy/charts/litellm-helm
       helm:
         valueFiles:
