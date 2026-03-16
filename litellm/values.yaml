@@ -2,6 +2,8 @@
 # Source chart: https://github.com/BerriAI/litellm/tree/main/deploy/charts/litellm-helm
 
 image:
+  repository: ghcr.io/berriai/litellm-database
+  tag: "main-latest"
   pullPolicy: IfNotPresent
 
 service:
@@ -18,3 +20,8 @@ proxyConfigMap:
           api_key: not-used
     general_settings:
       master_key: os.environ/PROXY_MASTER_KEY
+
+migrationJob:
+  hooks:
+    argocd:
+      enabled: false

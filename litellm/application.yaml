@@ -10,6 +10,11 @@ spec:
       targetRevision: main
       path: deploy/charts/litellm-helm
       helm:
+        parameters:
+          - name: image.repository
+            value: ghcr.io/berriai/litellm-database
+          - name: image.tag
+            value: main-latest
         valueFiles:
           - $values/litellm/values.yaml
     - repoURL: https://github.com/bahn1075/kubeai-cicd.git
