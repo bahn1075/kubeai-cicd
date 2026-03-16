@@ -81,6 +81,9 @@ modelServerPods:
   # 멀티노드 환경을 위해 PVC 기반 캐시를 마운트하여 모델 재다운로드를 방지
   jsonPatches:
   - op: add
+    path: /spec/containers/0/imagePullPolicy
+    value: IfNotPresent
+  - op: add
     path: /spec/volumes/-
     value:
       name: hf-cache
