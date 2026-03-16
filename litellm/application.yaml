@@ -7,13 +7,13 @@ spec:
   project: default
   sources:
     - repoURL: https://github.com/BerriAI/litellm.git
-      targetRevision: main
+      targetRevision: a10g
       path: deploy/charts/litellm-helm
       helm:
         valueFiles:
           - $values/litellm/values.yaml
     - repoURL: https://github.com/bahn1075/kubeai-cicd.git
-      targetRevision: main
+      targetRevision: a10g
       ref: values
   destination:
     server: https://kubernetes.default.svc
