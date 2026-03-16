@@ -11,15 +11,17 @@ service:
   port: 4000
 
 proxyConfigMap:
-  proxy_config:
-    model_list:
-      - model_name: qwen3-5-9b-base-vllm
-        litellm_params:
-          model: openai/qwen3-5-9b-base-vllm
-          api_base: http://kubeai.kubeai.svc.cluster.local/openai/v1
-          api_key: not-used
-    general_settings:
-      master_key: os.environ/PROXY_MASTER_KEY
+  create: true
+
+proxy_config:
+  model_list:
+    - model_name: qwen3-5-9b-base-vllm
+      litellm_params:
+        model: openai/qwen3-5-9b-base-vllm
+        api_base: http://kubeai.kubeai.svc.cluster.local/openai/v1
+        api_key: not-used
+  general_settings:
+    master_key: os.environ/PROXY_MASTER_KEY
 
 migrationJob:
   hooks:
