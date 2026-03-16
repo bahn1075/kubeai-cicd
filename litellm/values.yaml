@@ -25,3 +25,7 @@ migrationJob:
   hooks:
     argocd:
       enabled: false
+
+postgresql:
+  image:
+    tag: latest

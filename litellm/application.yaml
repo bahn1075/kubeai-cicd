@@ -15,6 +15,8 @@ spec:
             value: ghcr.io/berriai/litellm-database
           - name: image.tag
             value: main-latest
+          - name: postgresql.image.tag
+            value: latest
         valueFiles:
           - $values/litellm/values.yaml
     - repoURL: https://github.com/bahn1075/kubeai-cicd.git
