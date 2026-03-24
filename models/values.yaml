@@ -39,10 +39,6 @@ catalog:
     targetRequests: 64
     cacheProfile: model-cache-80gb
 
-
-
-
-
   exaone3.5:
     enabled: true
     features: ["TextGeneration"]
@@ -52,5 +48,6 @@ catalog:
       OLLAMA_KEEP_ALIVE: "1"
       OLLAMA_MAX_LOADED_MODELS: "2"
       OLLAMA_FLASH_ATTENTION: "true"
-    minReplicas: 1
+    minReplicas: 0
+    scaleDownDelaySeconds: 5
     resourceProfile: amd-gpu-rx9070xt:1
