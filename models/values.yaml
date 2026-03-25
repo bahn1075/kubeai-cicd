@@ -39,19 +39,33 @@ catalog:
     cacheProfile: model-cache-150gb
 
   exaone3-5-ollama:
-    enabled: false
+    enabled: true
     features: ["TextGeneration"]
     url: "ollama://exaone3.5:latest"
     engine: OLlama
     env:
       OLLAMA_KEEP_ALIVE: "1" # Keep the model loaded in memory
-      OLLAMA_MAX_LOADED_MODELS: "2"
+      OLLAMA_MAX_LOADED_MODELS: "1"
       OLLAMA_FLASH_ATTENTION: "true" # Enable Flash Attention
-    minReplicas: 1
+    minReplicas: 0
+    scaleDownDelaySeconds: 60
+    resourceProfile: nvidia-gpu-a10g:1
+
+  bge-m3-ollama:
+    enabled: true
+    features: ["TextEmbedding"]
+    url: "ollama://bge-m3:latest"
+    engine: OLlama
+    env:
+      OLLAMA_KEEP_ALIVE: "1" # Keep the model loaded in memory
+      OLLAMA_MAX_LOADED_MODELS: "1"
+      OLLAMA_FLASH_ATTENTION: "true" # Enable Flash Attention
+    minReplicas: 0
+    scaleDownDelaySeconds: 60
     resourceProfile: nvidia-gpu-a10g:1
 
   qwen3-5-9b-base-vllm:
-    enabled: true
+    enabled: false
     features: [TextGeneration]
     url: hf://Qwen/Qwen3.5-9B-Base
     engine: VLLM
