@@ -24,7 +24,12 @@ proxy_config:
       litellm_params:
         model: openai/qwen3-5-27b-ollama
         api_base: http://kubeai.kubeai.svc.cluster.local/openai/v1
-        api_key: not-used        
+        api_key: not-used     
+    - model_name: qwen3-5-9b-ollama
+      litellm_params:
+        model: openai/qwen3-5-9b-ollama
+        api_base: http://kubeai.kubeai.svc.cluster.local/openai/v1
+        api_key: not-used            
     - model_name: bge-m3-ollama
       litellm_params:
         model: openai/bge-m3-ollama
