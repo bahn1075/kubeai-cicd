@@ -15,6 +15,16 @@ proxyConfigMap:
 
 proxy_config:
   model_list:
+    - model_name: exaone3-5-ollama
+      litellm_params:
+        model: openai/exaone3-5-ollama
+        api_base: http://kubeai.kubeai.svc.cluster.local/openai/v1
+        api_key: not-used
+    - model_name: bge-m3-ollama
+      litellm_params:
+        model: openai/bge-m3-ollama
+        api_base: http://kubeai.kubeai.svc.cluster.local/openai/v1
+        api_key: not-used
     - model_name: qwen3-5-9b-base-vllm
       litellm_params:
         model: openai/qwen3-5-9b-base-vllm
