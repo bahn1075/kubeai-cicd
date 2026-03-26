@@ -8,7 +8,7 @@ image:
 
 service:
   type: LoadBalancer
-  port: 4000
+  port: 80
 
 proxyConfigMap:
   create: true
@@ -62,3 +62,7 @@ db:
 postgresql:
   image:
     tag: latest
+
+envVars:
+  DOCS_URL: /swagger
+  ROOT_REDIRECT_URL: /ui/
