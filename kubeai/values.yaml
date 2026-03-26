@@ -43,7 +43,7 @@ modelServers:
       # The "default" image should always be specified.
       # "default" is used when no imageName is specified or if a specific image is not found.
       default: "vllm/vllm-openai:v0.8.3"
-      nvidia-gpu: "vllm/vllm-openai:latest"
+      nvidia-gpu: "vllm/vllm-openai:v0.8.3"
       cpu: "substratusai/vllm:v0.6.3.post1-cpu"
       google-tpu: "substratusai/vllm:v0.6.4.post1-tpu"
       # Source: https://github.com/substratusai/vllm-docker/blob/main/Dockerfile.cuda-arm
@@ -81,9 +81,6 @@ modelServerPods:
   # 멀티노드 환경을 위해 PVC 기반 캐시를 마운트하여 모델 재다운로드를 방지
   jsonPatches:
   - op: add
-    path: /spec/containers/0/imagePullPolicy
-    value: IfNotPresent
-  - op: add
     path: /spec/volumes/-
     value:
       name: hf-cache
@@ -108,17 +105,15 @@ modelServerPods:
 
 modelServerPersistentCache:
   enabled: true
-  storageClassName: ""
+  storageClassName: "nfs-rwx"
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   hf:
     claimName: kubeai-hf-cache
-    storageClassName: "standard"
-    size: 150Gi
+    size: 80Gi
   ollama:
     claimName: kubeai-ollama-cache
-    storageClassName: ""
-    size: 50Gi
+    size: 80Gi
 
 modelRollouts:
   # The number of replicas to add when rolling out a new model.
@@ -243,19 +238,20 @@ resourceProfiles:
         value: "present"
         effect: "NoSchedule"
 ## 사용자가 정의 후 추가
-  nvidia-gpu-a10g:
-    imageName: "nvidia-gpu"
+  amd-gpu-rx9070xt:
+    imageName: "amd-gpu"
     limits:
-      nvidia.com/gpu: "1"
+      amd.com/gpu: "1"
     tolerations:
-      - key: "nvidia.com/gpu"
+      - key: "amd.com/gpu"
         operator: "Equal"
         value: "present"
         effect: "NoSchedule"
 cacheProfiles:
-  model-cache-150gb:
+  model-cache-80gb:
     sharedFilesystem:
-      size: "150Gi"
+      storageClassName: "nfs-rwx"
+      size: "80Gi"
 
 modelAutoscaling:
   # Interval that the autoscaler will scrape model server metrics.
@@ -263,7 +259,7 @@ modelAutoscaling:
   interval: 10s
   # Time window the autoscaling algorithm will consider when calculating
   # the desired number of replicas.
-  timeWindow: 1m
+  timeWindow: 10m
   # The name of the ConfigMap that stores the state of the autoscaler.
   # Defaults to "{fullname}-autoscaler-state".
   stateConfigMapName: ""

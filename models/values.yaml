@@ -12,7 +12,7 @@ catalog:
       OLLAMA_MAX_LOADED_MODELS: "2"
       OLLAMA_FLASH_ATTENTION: "true" # Enable Flash Attention
     minReplicas: 1
-    resourceProfile: nvidia-gpu-a10g:1
+    resourceProfile: amd-gpu-rx9070xt:1
 
   qwen3-5-2b-base-vllm:
     enabled:  false
@@ -34,7 +34,7 @@ catalog:
       - --enforce-eager  # CUDA graph 컴파일 비활성화 - startup CPU 스파이크 방지
       # - --gpu-memory-utilization=0.8
     minReplicas: 1
-    resourceProfile: nvidia-gpu-a10g:1
+    resourceProfile: amd-gpu-rx9070xt:1
     targetRequests: 64
     cacheProfile: model-cache-150gb
 
@@ -49,7 +49,7 @@ catalog:
       OLLAMA_FLASH_ATTENTION: "true" # Enable Flash Attention
     minReplicas: 0
     scaleDownDelaySeconds: 60
-    resourceProfile: nvidia-gpu-a10g:1
+    resourceProfile: amd-gpu-rx9070xt:1
 
   qwen3-5-27b-ollama:
     enabled: true
@@ -62,7 +62,7 @@ catalog:
       OLLAMA_FLASH_ATTENTION: "true" # Enable Flash Attention
     minReplicas: 0
     scaleDownDelaySeconds: 60
-    resourceProfile: nvidia-gpu-a10g:1
+    resourceProfile: amd-gpu-rx9070xt:1
 
   qwen3-5-9b-ollama:
     enabled: true
@@ -75,7 +75,7 @@ catalog:
       OLLAMA_FLASH_ATTENTION: "true" # Enable Flash Attention
     minReplicas: 0
     scaleDownDelaySeconds: 60
-    resourceProfile: nvidia-gpu-a10g:1
+    resourceProfile: amd-gpu-rx9070xt:1
 
   bge-m3-ollama:
     enabled: true
@@ -88,7 +88,7 @@ catalog:
       OLLAMA_FLASH_ATTENTION: "true" # Enable Flash Attention
     minReplicas: 0
     scaleDownDelaySeconds: 60
-    resourceProfile: nvidia-gpu-a10g:1
+    resourceProfile: amd-gpu-rx9070xt:1
 
   qwen3-5-9b-base-vllm:
     enabled: false
@@ -96,7 +96,7 @@ catalog:
     url: hf://Qwen/Qwen3.5-9B-Base
     engine: VLLM
     minReplicas: 1
-    resourceProfile: nvidia-gpu-a10g:1
+    resourceProfile: amd-gpu-rx9070xt:1
     cacheProfile: model-cache-150gb
     # 컨테이너 메모리 제한도 너무 낮지 않게(예: 12~14Gi 이상) 설정 권장
     # e.g. KubeAI/클러스터 설정에서 memory: "14Gi"
