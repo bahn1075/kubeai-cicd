@@ -259,7 +259,9 @@ modelAutoscaling:
   interval: 10s
   # Time window the autoscaling algorithm will consider when calculating
   # the desired number of replicas.
-  timeWindow: 10m
+  # Keep this aligned with per-model scaleDownDelaySeconds so idle models
+  # can actually decay to zero shortly after the delay expires.
+  timeWindow: 60s
   # The name of the ConfigMap that stores the state of the autoscaler.
   # Defaults to "{fullname}-autoscaler-state".
   stateConfigMapName: ""

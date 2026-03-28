@@ -12,6 +12,8 @@ catalog:
       OLLAMA_MAX_LOADED_MODELS: "1"
       OLLAMA_FLASH_ATTENTION: "true" # Enable Flash Attention
     minReplicas: 0
+    # Requires kubeai.modelAutoscaling.timeWindow to stay short enough
+    # for the moving average to decay back to zero promptly.
     scaleDownDelaySeconds: 60
     resourceProfile: amd-gpu-rx9070xt:1
 
