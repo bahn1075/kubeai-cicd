@@ -20,7 +20,7 @@ spec:
         valueFiles:
           - $values/litellm/values.yaml
     - repoURL: https://github.com/bahn1075/kubeai-cicd.git
-      targetRevision: a10g
+      targetRevision: desktop
       ref: values
   destination:
     server: https://kubernetes.default.svc
