@@ -10,6 +10,9 @@ service:
   type: LoadBalancer
   port: 4000
 
+environmentSecrets:
+  - litellm-ui-auth
+
 proxyConfigMap:
   create: true
 
