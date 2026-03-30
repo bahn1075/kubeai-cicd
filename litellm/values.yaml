@@ -66,3 +66,4 @@ postgresql:
 envVars:
   DOCS_URL: /swagger
   ROOT_REDIRECT_URL: /ui/
+  STORE_MODEL_IN_DB: "True"
