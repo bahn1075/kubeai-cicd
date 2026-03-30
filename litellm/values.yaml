@@ -10,6 +10,9 @@ service:
   type: LoadBalancer
   port: 80
 
+masterkeySecretName: litellm-masterkey
+masterkeySecretKey: masterkey
+
 proxyConfigMap:
   create: true
 
@@ -44,6 +47,7 @@ proxy_config:
     master_key: os.environ/PROXY_MASTER_KEY
 
 migrationJob:
+  ttlSecondsAfterFinished: 604800
   hooks:
     argocd:
       enabled: false
