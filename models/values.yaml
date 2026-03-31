@@ -109,12 +109,12 @@ catalog:
     url: hf://Qwen/Qwen3.5-27B
     engine: VLLM
     minReplicas: 0
-    resourceProfile: nvidia-gpu-a10g:3
+    resourceProfile: nvidia-gpu-a10g:4
     cacheProfile: model-cache-150gb
     args:
       - --max-model-len=8192
       - --max-num-batched-tokens=1024
       - --max-num-seqs=32
-      - --tensor-parallel-size=3
+      - --tensor-parallel-size=4
       - --gpu-memory-utilization=0.80
       - --enforce-eager
