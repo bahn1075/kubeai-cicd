@@ -23,6 +23,11 @@ proxy_config:
         model: openai/exaone3-5-ollama
         api_base: http://kubeai.kubeai.svc.cluster.local/openai/v1
         api_key: not-used
+    - model_name: exaone-deep-32b-ollama
+      litellm_params:
+        model: openai/exaone-deep-32b-ollama
+        api_base: http://kubeai.kubeai.svc.cluster.local/openai/v1
+        api_key: not-used        
     - model_name: qwen3-5-27b-ollama
       litellm_params:
         model: openai/qwen3-5-27b-ollama
