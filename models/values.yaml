@@ -116,6 +116,6 @@ catalog:
       - --max-num-batched-tokens=1024
       - --max-num-seqs=16
       - --tensor-parallel-size=4
-      - --gpu-memory-utilization=0.75
+      - --gpu-memory-utilization=0.9
       - --language-model-only
       - --enforce-eager
