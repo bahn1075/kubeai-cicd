@@ -103,27 +103,27 @@ catalog:
     scaleDownDelaySeconds: 60
     resourceProfile: nvidia-gpu-a10g:1
 
-  qwen3-5-9b-base-vllm:
-    enabled: false
+  qwen3-5-27b-base-vllm:
+    enabled: true
     features: [TextGeneration]
-    url: hf://Qwen/Qwen3.5-9B-Base
+    url: hf://Qwen/Qwen3.5-27B-Base
     engine: VLLM
-    minReplicas: 1
-    resourceProfile: nvidia-gpu-a10g:1
+    minReplicas: 0
+    resourceProfile: nvidia-gpu-a10g:3
     cacheProfile: model-cache-150gb
-    # 컨테이너 메모리 제한도 너무 낮지 않게(예: 12~14Gi 이상) 설정 권장
-    # e.g. KubeAI/클러스터 설정에서 memory: "14Gi"
-    args:
-      # - --trust-remote-code
-      - --max-model-len=8192            # 또는 16384
-      - --max-num-batched-tokens=1024   # 또는 2048
-      - --max-num-seqs=32               # 동시 시퀀스 제한
-      - --gpu-memory-utilization=0.80
-      - --language-model-only           # 비전 인코더/프로파일링 비활성화
-      - --enforce-eager                 # 초기 피크 완화
-    # 필요 시 환경변수
-    env:
-      # 초기화/컴파일 변동성 줄이기용 선택사항
-      VLLM_USE_TRITON_FLASH_ATTN: "0"
-      # 디버깅 시 메모리 추가 여유가 필요하면 로깅 줄이기
-      # VLLM_DISABLE_LOG_REQUESTS: "1"
+    # # 컨테이너 메모리 제한도 너무 낮지 않게(예: 12~14Gi 이상) 설정 권장
+    # # e.g. KubeAI/클러스터 설정에서 memory: "14Gi"
+    # args:
+    #   # - --trust-remote-code
+    #   - --max-model-len=8192            # 또는 16384
+    #   - --max-num-batched-tokens=1024   # 또는 2048
+    #   - --max-num-seqs=32               # 동시 시퀀스 제한
+    #   - --gpu-memory-utilization=0.80
+    #   - --language-model-only           # 비전 인코더/프로파일링 비활성화
+    #   - --enforce-eager                 # 초기 피크 완화
+    # # 필요 시 환경변수
+    # env:
+    #   # 초기화/컴파일 변동성 줄이기용 선택사항
+    #   VLLM_USE_TRITON_FLASH_ATTN: "0"
+    #   # 디버깅 시 메모리 추가 여유가 필요하면 로깅 줄이기
+    #   # VLLM_DISABLE_LOG_REQUESTS: "1"

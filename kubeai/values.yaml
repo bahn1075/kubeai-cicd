@@ -257,6 +257,21 @@ cacheProfiles:
     sharedFilesystem:
       size: "150Gi"
 
+## 사용자가 정의 후 추가
+  nvidia-gpu-a10g-3:
+    imageName: "nvidia-gpu"
+    limits:
+      nvidia.com/gpu: "3"
+    tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Equal"
+        value: "present"
+        effect: "NoSchedule"
+cacheProfiles:
+  model-cache-150gb:
+    sharedFilesystem:
+      size: "150Gi"
+
 modelAutoscaling:
   # Interval that the autoscaler will scrape model server metrics.
   # and calculate the desired number of replicas.
