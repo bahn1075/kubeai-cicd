@@ -51,10 +51,10 @@ catalog:
     scaleDownDelaySeconds: 60
     resourceProfile: nvidia-gpu-a10g:1
 
-  exaone-deep-32b-ollama:
+  exaone-4-32b-ollama:
     enabled: true
     features: ["TextGeneration"]
-    url: "ollama://exaone-deep:32b"
+    url: "ollama://ingu627/exaone4.0:32b"
     engine: OLlama
     env:
       OLLAMA_KEEP_ALIVE: "1" # Keep the model loaded in memory
