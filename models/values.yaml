@@ -103,10 +103,10 @@ catalog:
     scaleDownDelaySeconds: 60
     resourceProfile: nvidia-gpu-a10g:1
 
-  qwen3-5-27b-base-vllm:
+  qwen3-5-27b-vllm:
     enabled: true
     features: [TextGeneration]
-    url: hf://Qwen/Qwen3.5-27B-Base
+    url: hf://Qwen/Qwen3.5-27B
     engine: VLLM
     minReplicas: 0
     resourceProfile: nvidia-gpu-a10g:3
