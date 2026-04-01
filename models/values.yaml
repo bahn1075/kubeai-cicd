@@ -2,85 +2,10 @@ all:
   enabled: false
 
 catalog:
-  qwen3-06b-gpu:
-    enabled: false
-    features: ["TextGeneration"]
-    url: "ollama://qwen3:0.6b"
-    engine: OLlama
-    env:
-      OLLAMA_KEEP_ALIVE: "1" # Keep the model loaded in memory
-      OLLAMA_MAX_LOADED_MODELS: "2"
-      OLLAMA_FLASH_ATTENTION: "true" # Enable Flash Attention
-    minReplicas: 1
-    resourceProfile: nvidia-gpu-a10g:1
-
-  qwen3-5-2b-base-vllm:
-    enabled:  false
-    features: [TextGeneration]
-    url: hf://Qwen/Qwen3.5-2B-Base
-    engine: VLLM
-    env:
-      HIP_FORCE_DEV_KERNARG: "1"
-      NCCL_MIN_NCHANNELS: "112"
-      TORCH_BLAS_PREFER_HIPBLASLT: "1"
-      VLLM_USE_TRITON_FLASH_ATTN: "0"
-      VLLM_FP8_PADDING: "0"
-    args:
-      - --trust-remote-code
-      - --max-model-len=8192
-      - --max-num-batched-tokens=4096
-      - --max-num-seqs=64
-      - --tensor-parallel-size=1
-      - --enforce-eager  # CUDA graph 컴파일 비활성화 - startup CPU 스파이크 방지
-      # - --gpu-memory-utilization=0.8
-    minReplicas: 1
-    resourceProfile: nvidia-gpu-a10g:1
-    targetRequests: 64
-    cacheProfile: model-cache-150gb
-
   exaone3-5-ollama:
     enabled: true
     features: ["TextGeneration"]
     url: "ollama://exaone3.5:latest"
-    engine: OLlama
-    env:
-      OLLAMA_KEEP_ALIVE: "1" # Keep the model loaded in memory
-      OLLAMA_MAX_LOADED_MODELS: "1"
-      OLLAMA_FLASH_ATTENTION: "true" # Enable Flash Attention
-    minReplicas: 0
-    scaleDownDelaySeconds: 60
-    resourceProfile: nvidia-gpu-a10g:1
-
-  exaone-4-32b-ollama:
-    enabled: true
-    features: ["TextGeneration"]
-    url: "ollama://ingu627/exaone4.0:32b"
-    engine: OLlama
-    env:
-      OLLAMA_KEEP_ALIVE: "1" # Keep the model loaded in memory
-      OLLAMA_MAX_LOADED_MODELS: "1"
-      OLLAMA_FLASH_ATTENTION: "true" # Enable Flash Attention
-    minReplicas: 0
-    scaleDownDelaySeconds: 60
-    resourceProfile: nvidia-gpu-a10g:1    
-
-  qwen3-5-27b-ollama:
-    enabled: true
-    features: ["TextGeneration"]
-    url: "ollama://qwen3.5:27b"
-    engine: OLlama
-    env:
-      OLLAMA_KEEP_ALIVE: "1" # Keep the model loaded in memory
-      OLLAMA_MAX_LOADED_MODELS: "1"
-      OLLAMA_FLASH_ATTENTION: "true" # Enable Flash Attention
-    minReplicas: 0
-    scaleDownDelaySeconds: 60
-    resourceProfile: nvidia-gpu-a10g:1
-
-  qwen3-5-9b-ollama:
-    enabled: true
-    features: ["TextGeneration"]
-    url: "ollama://qwen3.5:9b"
     engine: OLlama
     env:
       OLLAMA_KEEP_ALIVE: "1" # Keep the model loaded in memory
@@ -119,3 +44,16 @@ catalog:
       - --gpu-memory-utilization=0.9
       - --language-model-only
       - --enforce-eager
+
+  Qwen3-5-27B-Claude-4-6-Opus-Reasoning-Distilled-GGUF:
+    enabled: true
+    features: ["TextGeneration"]
+    url: "ollama://moophlo/Qwen3.5-27B-Claude-4.6-Opus-Reasoning-Distilled-GGUF:latest"
+    engine: OLlama
+    env:
+      OLLAMA_KEEP_ALIVE: "1" # Keep the model loaded in memory
+      OLLAMA_MAX_LOADED_MODELS: "1"
+      OLLAMA_FLASH_ATTENTION: "true" # Enable Flash Attention
+    minReplicas: 0
+    scaleDownDelaySeconds: 60
+    resourceProfile: nvidia-gpu-a10g:1

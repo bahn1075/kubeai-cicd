@@ -23,26 +23,15 @@ proxy_config:
         model: openai/exaone3-5-ollama
         api_base: http://kubeai.kubeai.svc.cluster.local/openai/v1
         api_key: not-used
-    - model_name: exaone-4-32b-ollama
-      litellm_params:
-        model: openai/exaone-4-32b-ollama
-        api_base: http://kubeai.kubeai.svc.cluster.local/openai/v1
-        api_key: not-used        
-    - model_name: qwen3-5-27b-ollama
-      litellm_params:
-        model: openai/qwen3-5-27b-vllm
-        api_base: http://kubeai.kubeai.svc.cluster.local/openai/v1
-        api_key: not-used     
-    - model_name: qwen3-5-9b-ollama
-      litellm_params:
-        model: openai/qwen3-5-9b-ollama
-        api_base: http://kubeai.kubeai.svc.cluster.local/openai/v1
-        api_key: not-used            
     - model_name: bge-m3-ollama
       litellm_params:
         model: openai/bge-m3-ollama
         api_base: http://kubeai.kubeai.svc.cluster.local/openai/v1
         api_key: not-used
+    - model_name: Qwen3-5-27B-Claude-4-6-Opus-Reasoning-Distilled-GGUF
+      litellm_params:
+        model: openai/Qwen3-5-27B-Claude-4-6-Opus-Reasoning-Distilled-GGUF
+        api_base: http://kubeai.kubeai.svc.cluster.local/openai/v1        
     - model_name: qwen3-5-9b-vllm
       litellm_params:
         model: openai/qwen3-5-9b-vllm
