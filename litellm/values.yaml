@@ -28,9 +28,9 @@ proxy_config:
         model: openai/bge-m3-ollama
         api_base: http://kubeai.kubeai.svc.cluster.local/openai/v1
         api_key: not-used
-    - model_name: Qwen3-5-27B-Claude-4-6-Opus-Reasoning-Distilled-GGUF
+    - model_name: Qwen3-5-27B-Claude-4-6-Opus-Reasoning
       litellm_params:
-        model: openai/Qwen3-5-27B-Claude-4-6-Opus-Reasoning-Distilled-GGUF
+        model: openai/Qwen3-5-27B-Claude-4-6-Opus-Reasoning
         api_base: http://kubeai.kubeai.svc.cluster.local/openai/v1        
     - model_name: qwen3-5-9b-vllm
       litellm_params:
