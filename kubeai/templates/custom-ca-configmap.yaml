@@ -1,0 +1,11 @@
+{{- if and .Values.customCA.enabled .Values.customCA.cert }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.customCA.configMapName }}
+  labels:
+    {{- include "kubeai.labels" . | nindent 4 }}
+data:
+  ca.crt: |
+{{ .Values.customCA.cert | nindent 4 }}
+{{- end }}

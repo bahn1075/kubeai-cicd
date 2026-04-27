@@ -44,7 +44,9 @@ modelServers:
       # "default" is used when no imageName is specified or if a specific image is not found.
       default: "vllm/vllm-openai:v0.8.3"
       nvidia-gpu: "vllm/vllm-openai:v0.8.3"
-      cpu: "substratusai/vllm:v0.6.3.post1-cpu"
+      # Apple Silicon MacBook 환경에서는 Kubernetes pod에 GPU(Metal/MPS)를 직접 할당하기 어렵기 때문에
+      # CPU 이미지를 기본 호환 경로로 사용한다.
+      cpu: "vllm/vllm-openai-cpu:latest-arm64"
       google-tpu: "substratusai/vllm:v0.6.4.post1-tpu"
       # Source: https://github.com/substratusai/vllm-docker/blob/main/Dockerfile.cuda-arm
       gh200: "substratusai/vllm-gh200:v0.8.3"
@@ -55,6 +57,7 @@ modelServers:
   OLlama:
     images:
       default: "ollama/ollama:latest"
+      cpu: "ollama/ollama:latest"
       amd-gpu: "ollama/ollama:rocm"
   FasterWhisper:
     images:
@@ -65,7 +68,7 @@ modelServers:
       default: "michaelf34/infinity:latest"
 
 modelLoading:
-  image: "substratusai/kubeai-model-loader:main"
+  image: "cozy/kubeai-model-loader:lgcns"
 
 modelServerPods:
   # Security Context for the model pods
@@ -102,12 +105,79 @@ modelServerPods:
     value:
       name: ollama-cache
       mountPath: /root/.ollama
+  - op: add
+    path: /spec/volumes/-
+    value:
+      name: custom-ca-cert
+      configMap:
+        name: lgcns-custom-ca
+  - op: add
+    path: /spec/volumes/-
+    value:
+      name: custom-ca-work
+      emptyDir: {}
+  - op: add
+    path: /spec/initContainers
+    value:
+      - name: prepare-custom-ca-bundle
+        image: "ollama/ollama:latest"
+        command:
+          - sh
+          - -c
+          - |
+            cp /etc/ssl/certs/ca-certificates.crt /work/ca-certificates.crt
+            cat /custom-ca/ca.crt >> /work/ca-certificates.crt
+        volumeMounts:
+          - name: custom-ca-cert
+            mountPath: /custom-ca
+            readOnly: true
+          - name: custom-ca-work
+            mountPath: /work
+  - op: add
+    path: /spec/containers/0/volumeMounts/-
+    value:
+      name: custom-ca-work
+      mountPath: /etc/ssl/certs/ca-certificates.crt
+      subPath: ca-certificates.crt
+      readOnly: true
+
+customCA:
+  enabled: true
+  configMapName: "lgcns-custom-ca"
+  # 기본 CA 번들에 추가로 붙일 사내 루트 CA
+  cert: |
+    -----BEGIN CERTIFICATE-----
+    MIIEQzCCAyugAwIBAgIJAK8ZWhp0CMv4MA0GCSqGSIb3DQEBCwUAMIG3MQswCQYD
+    VQQGEwJLUjEOMAwGA1UECAwFU2VvdWwxGDAWBgNVBAcMD1llb25nZGV1bmdwby1n
+    dTEaMBgGA1UECgwRTEcgQ05TIENvLiBMdGQgdjMxIjAgBgNVBAsMGUluZm9ybWF0
+    aW9uIFNlY3VyaXR5IFRlYW0xGjAYBgNVBAMMEUxHIENOUyBDby4gTHRkIHYzMSIw
+    IAYJKoZIhvcNAQkBFhNpbmZvc2VjMDFAbGdjbnMuY29tMB4XDTI0MDIyMjExMDcy
+    N1oXDTM0MDIxOTExMDcyN1owgbcxCzAJBgNVBAYTAktSMQ4wDAYDVQQIDAVTZW91
+    bDEYMBYGA1UEBwwPWWVvbmdkZXVuZ3BvLWd1MRowGAYDVQQKDBFMRyBDTlMgQ28u
+    IEx0ZCB2MzEiMCAGA1UECwwZSW5mb3JtYXRpb24gU2VjdXJpdHkgVGVhbTEaMBgG
+    A1UEAwwRTEcgQ05TIENvLiBMdGQgdjMxIjAgBgkqhkiG9w0BCQEWE2luZm9zZWMw
+    MUBsZ2Nucy5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCsBuk/
+    I0x6oDSL5N1kxLGN1m4pzEn1zlHqYe0oSKVTbRWFqcBHqf8s8Rpk7CaJ8Diiekbk
+    59LS1mHeWP2MU+HsSTuvRZjKXDXkiGZABhZBnRce34hIEdNlBeNuzUq8jCSjuiO6
+    TEe7vEonoTJjFZ3QksXMqgjvzc7UstoumN5/ds+rGXkbFvaRvwQ72r2HqK+4NwRn
+    7HDeEeTkncvgR9xtNQWLcukqymlFw+LwdetZ2YJqZ4AAPBa7EJn/3sqTn0Epbht4
+    r2vfVkCDIi0AOtbc1kn0IRAJCa4cEx7JVyYQx/aTZclsEAmmaEiWlSPqYDWPfqHm
+    dAjdlEVJU9ZvrfPhAgMBAAGjUDBOMB0GA1UdDgQWBBSlOmym1REtNAwdwq90ALvS
+    hFgAwTAfBgNVHSMEGDAWgBSlOmym1REtNAwdwq90ALvShFgAwTAMBgNVHRMEBTAD
+    AQH/MA0GCSqGSIb3DQEBCwUAA4IBAQBBOb4Yz8cU3dCayL8Ydfu6Hn9mrRVOavl4
+    K3HG8hXa1p0NYXMdL6AEQzt/znZLZr3SqtyKtGm4S1Lr65uS7eiDDJh+irazdHHM
+    9bK9kDbDachOPmm/RejrXFAdR7xpZH5mmAfNmQLwRmHDHDSTGQZipF4k8672e+/e
+    7Z6n+AIZfKEPrzA5Hc7cRNugQmzjYNnH+ZIo6j6ztnDTGyP3H2f+hYpQ84O69u5v
+    Sha1dYIRy45eIXu1vsfgyrv6S6KVrj6Hfkhamh3jVUiIcCZhihRs61nro9KSE3hB
+    6HH2WVUvYqsBs7j1L1Yry9Tn2MC7c5l2OCO35OlZXenSYm1TlcW4
+    -----END CERTIFICATE-----
 
 modelServerPersistentCache:
   enabled: true
-  storageClassName: "nfs-rwx"
+  # 현재 Minikube 클러스터의 기본 StorageClass는 standard 이므로 명시적으로 지정한다.
+  storageClassName: "standard"
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   hf:
     claimName: kubeai-hf-cache
     size: 80Gi
@@ -239,18 +309,17 @@ resourceProfiles:
         effect: "NoSchedule"
 ## 사용자가 정의 후 추가
   amd-gpu-rx9070xt:
-    imageName: "amd-gpu"
-    limits:
-      amd.com/gpu: "1"
-    tolerations:
-      - key: "amd.com/gpu"
-        operator: "Equal"
-        value: "present"
-        effect: "NoSchedule"
+    # MacBook Pro M5(Apple Silicon) 호환용 fallback profile.
+    # 기존 models/values.yaml에서 이 프로파일명을 참조하더라도
+    # 로컬 Mac에서는 CPU 기반으로 동작하게 맞춘다.
+    imageName: "cpu"
+    requests:
+      cpu: "4"
+      memory: "8Gi"
 cacheProfiles:
   model-cache-80gb:
     sharedFilesystem:
-      storageClassName: "nfs-rwx"
+      storageClassName: "standard"
       size: "80Gi"
 
 modelAutoscaling:
@@ -295,6 +364,12 @@ open-webui:
     value: "true"
   - name: ENABLE_EVALUATION_ARENA_MODELS
     value: "False"
+  - name: OFFLINE_MODE
+    value: "true"
+  - name: RAG_EMBEDDING_MODEL_AUTO_UPDATE
+    value: "false"
+  - name: WHISPER_MODEL_AUTO_UPDATE
+    value: "false"
   # Security Context for the openwebui pod
   # Needed for OpenShift
   containerSecurityContext:
