@@ -275,7 +275,7 @@ open-webui:
   enabled: true
   image:
     repository: ghcr.io/open-webui/open-webui
-    tag: "latest"
+    tag: "main"
     pullPolicy: Always
   ollama:
     enabled: false
