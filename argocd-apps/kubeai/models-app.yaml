@@ -7,7 +7,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/bahn1075/kubeai-cicd.git
-    targetRevision: main
+    targetRevision: a10g
     path: models
     helm:
       valueFiles:
@@ -22,7 +22,5 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - AllowEmpty=true
-      - Replace=true
-      - Force=true
       - PruneLast=true  # Custom Resource를 마지막에 prune (중요!)
       - RespectIgnoreDifferences=true

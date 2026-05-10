@@ -7,7 +7,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/bahn1075/kubeai-cicd.git
-    targetRevision: main
+    targetRevision: a10g
     path: kubeai
     helm:
       valueFiles:
@@ -15,6 +15,15 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: kubeai
+  ignoreDifferences:
+    - group: ""
+      kind: PersistentVolumeClaim
+      jsonPointers:
+        - /spec/storageClassName
+    - group: ""
+      kind: PersistentVolume
+      jsonPointers:
+        - /spec/storageClassName
   syncPolicy:
     automated:
       prune: true

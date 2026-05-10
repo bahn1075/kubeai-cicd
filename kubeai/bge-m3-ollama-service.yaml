@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: bge-m3-ollama
+  namespace: kubeai
+spec:
+  selector:
+    model: bge-m3-ollama
+    app: model
+  ports:
+    - name: http
+      port: 11434
+      targetPort: 8000
+      protocol: TCP
+  type: ClusterIP

@@ -1,0 +1,67 @@
+# LiteLLM chart values
+# Source chart: https://github.com/BerriAI/litellm/tree/main/deploy/charts/litellm-helm
+
+image:
+  repository: ghcr.io/berriai/litellm-database
+  tag: "main-latest"
+  pullPolicy: IfNotPresent
+
+service:
+  type: LoadBalancer
+  port: 4000
+
+environmentSecrets:
+  - litellm-ui-auth
+
+proxyConfigMap:
+  create: true
+
+proxy_config:
+  model_list:
+    - model_name: exaone3-5-ollama
+      litellm_params:
+        model: openai/exaone3-5-ollama
+        api_base: http://kubeai.kubeai.svc.cluster.local/openai/v1
+        api_key: not-used
+    - model_name: qwen3-5-27b-ollama
+      litellm_params:
+        model: openai/qwen3-5-27b-ollama
+        api_base: http://kubeai.kubeai.svc.cluster.local/openai/v1
+        api_key: not-used     
+    - model_name: qwen3-5-9b-ollama
+      litellm_params:
+        model: openai/qwen3-5-9b-ollama
+        api_base: http://kubeai.kubeai.svc.cluster.local/openai/v1
+        api_key: not-used            
+    - model_name: bge-m3-ollama
+      litellm_params:
+        model: openai/bge-m3-ollama
+        api_base: http://kubeai.kubeai.svc.cluster.local/openai/v1
+        api_key: not-used
+    - model_name: qwen3-5-9b-base-vllm
+      litellm_params:
+        model: openai/qwen3-5-9b-base-vllm
+        api_base: http://kubeai.kubeai.svc.cluster.local/openai/v1
+        api_key: not-used
+  general_settings:
+    master_key: os.environ/PROXY_MASTER_KEY
+
+migrationJob:
+  hooks:
+    argocd:
+      enabled: false
+
+db:
+  useExisting: true
+  deployStandalone: false
+  endpoint: postgres.64bit.kr:5432
+  database: litellm
+  url: postgresql://$(DATABASE_USERNAME):$(DATABASE_PASSWORD)@$(DATABASE_HOST)/$(DATABASE_NAME)?schema=litellm
+  secret:
+    name: postgres
+    usernameKey: username
+    passwordKey: password
+
+postgresql:
+  image:
+    tag: latest
