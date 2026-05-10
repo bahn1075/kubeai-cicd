@@ -129,11 +129,18 @@ pipeline {
                     def serviceType = params.SERVICE_TYPE
                     def llmServe = params.LLM_SERVE
                     def llmModel = params.LLM_MODEL
+                    def engineSuffix = llmServe.toLowerCase()
+                    def normalizedProjectName = projectName
+                        .toLowerCase()
+                        .replaceAll('[^a-z0-9-]', '-')
+                        .replaceAll('-+', '-')
+                        .replaceAll('(^-|-$)', '')
+                    def modelConfigName = "${normalizedProjectName}-${engineSuffix}"
                     def modelBlock = ""
 
                     if (llmServe == 'ollama') {
                         modelBlock = """
-  ${projectName}:
+  ${modelConfigName}:
     enabled: true
     features: ["${serviceType}"]
     url: "${llmModel}"
@@ -147,7 +154,7 @@ pipeline {
                     } else {
                         // vLLM
                         modelBlock = """
-  ${projectName}:
+  ${modelConfigName}:
     enabled: true
     features: [${serviceType}]
     url: ${llmModel}
@@ -172,10 +179,10 @@ pipeline {
                     // values.yaml에 모델 블럭 추가 (중복 방지)
                     def valuesContent = readFile(env.VALUES_FILE)
 
-                    if (valuesContent.contains("${projectName}:")) {
-                        echo "⚠️ 프로젝트 '${projectName}' 블럭이 이미 존재합니다. 입력값 기준으로 전체 덮어씁니다."
+                    if (valuesContent.contains("${modelConfigName}:")) {
+                        echo "⚠️ 모델 설정 '${modelConfigName}' 블럭이 이미 존재합니다. 입력값 기준으로 전체 덮어씁니다."
                         // catalog 하위의 동일 project 블럭 전체를 새 modelBlock으로 교체
-                        def escapedProject = java.util.regex.Pattern.quote(projectName)
+                        def escapedProject = java.util.regex.Pattern.quote(modelConfigName)
                         def blockPattern = "(?ms)^  ${escapedProject}:\\n(?:    .*\\n|\\n)*?(?=^  [^\\s].*:\\n|\\z)"
                         def normalizedBlock = modelBlock.startsWith("\n") ? modelBlock.substring(1) : modelBlock
                         valuesContent = valuesContent.replaceFirst(blockPattern, normalizedBlock + "\n")
@@ -183,7 +190,7 @@ pipeline {
                     } else {
                         // 새 블럭 append
                         sh "echo '${modelBlock}' >> ${env.VALUES_FILE}"
-                        echo "✅ 새 모델 블럭 추가 완료: ${projectName}"
+                        echo "✅ 새 모델 블럭 추가 완료: ${modelConfigName}"
                     }
 
                     echo "\n📄 현재 values.yaml:"
@@ -198,16 +205,22 @@ pipeline {
                     def projectName = params.PROJECT_NAME.trim()
                     def llmServe = params.LLM_SERVE
                     def engineSuffix = llmServe.toLowerCase()
+                    def normalizedProjectName = projectName
+                        .toLowerCase()
+                        .replaceAll('[^a-z0-9-]', '-')
+                        .replaceAll('-+', '-')
+                        .replaceAll('(^-|-$)', '')
+                    def modelConfigName = "${normalizedProjectName}-${engineSuffix}"
                     def serviceFile = "kong/services/${projectName}.yaml"
 
                     def kongServiceYaml = """apiVersion: v1
 kind: Service
 metadata:
-  name: ${projectName}-${engineSuffix}
+  name: ${modelConfigName}
   namespace: kubeai
 spec:
   selector:
-    model: ${projectName}
+    model: ${modelConfigName}
   ports:
     - name: http
       port: 8000
@@ -216,7 +229,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: ${projectName}-${engineSuffix}
+  name: ${modelConfigName}
   namespace: kubeai
   annotations:
     konghq.com/strip-path: "true"
@@ -229,7 +242,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: ${projectName}-${engineSuffix}
+                name: ${modelConfigName}
                 port:
                   number: 8000
 """
