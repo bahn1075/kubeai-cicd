@@ -3,7 +3,7 @@ properties([
         string(
             name: 'PROJECT_NAME',
             defaultValue: 'test1',
-            description: 'project name (main branch에서 분기될 branch명으로 사용)',
+            description: 'project name (desktop branch에서 분기될 branch명으로 사용)',
             trim: true
         ),
         choice(
@@ -68,7 +68,7 @@ pipeline {
         REPO_URL = 'https://github.com/bahn1075/kubeai-cicd.git'
         REPO_OWNER = 'bahn1075'
         REPO_NAME = 'kubeai-cicd'
-        BASE_BRANCH = 'main'
+        BASE_BRANCH = 'desktop'
         VALUES_FILE = 'models/values.yaml'
         GIT_CREDENTIALS_ID = 'github'
     }
@@ -99,8 +99,8 @@ pipeline {
         stage('Checkout & Branch') {
             steps {
                 script {
-                    // main 체크아웃
-                    git branch: 'main', credentialsId: env.GIT_CREDENTIALS_ID, url: env.REPO_URL
+                    // base branch 체크아웃
+                    git branch: env.BASE_BRANCH, credentialsId: env.GIT_CREDENTIALS_ID, url: env.REPO_URL
 
                     // 프로젝트명 브랜치 생성 (이미 존재하면 체크아웃)
                     def branchName = params.PROJECT_NAME.trim()
@@ -115,8 +115,8 @@ pipeline {
                     } else {
                         sh "git fetch origin ${branchName}"
                         sh "git checkout ${branchName}"
-                        sh "git merge origin/main --no-edit || true"
-                        echo "🔄 기존 브랜치 체크아웃: ${branchName} (main 머지 완료)"
+                        sh "git merge origin/${env.BASE_BRANCH} --no-edit || true"
+                        echo "🔄 기존 브랜치 체크아웃: ${branchName} (${env.BASE_BRANCH} 머지 완료)"
                     }
                 }
             }
