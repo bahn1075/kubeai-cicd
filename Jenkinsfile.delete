@@ -16,7 +16,7 @@ pipeline {
         REPO_URL = 'https://github.com/bahn1075/kubeai-cicd.git'
         REPO_OWNER = 'bahn1075'
         REPO_NAME = 'kubeai-cicd'
-        BASE_BRANCH = 'main'
+        BASE_BRANCH = 'desktop'
         VALUES_FILE = 'models/values.yaml'
         GIT_CREDENTIALS_ID = 'github'
     }
@@ -50,8 +50,8 @@ pipeline {
                     
                     echo "🌿 삭제 작업용 브랜치 생성: ${deleteBranch}"
                     
-                    // main 체크아웃
-                    git branch: 'main', credentialsId: env.GIT_CREDENTIALS_ID, url: env.REPO_URL
+                    // base branch 체크아웃
+                    git branch: env.BASE_BRANCH, credentialsId: env.GIT_CREDENTIALS_ID, url: env.REPO_URL
                     
                     // 기존 delete 브랜치가 있으면 삭제 후 새로 생성
                     sh """
