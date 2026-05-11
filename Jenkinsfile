@@ -40,17 +40,12 @@ properties([
                             return [
                                 'ollama://bge-m3',
                                 'ollama://exaone3.5',
-                                'ollama://qwen3:4b',
-                                'ollama://qwen3:8b',
-                                'ollama://qwen3:14b'
+                                'ollama://qwen3.5:9b'
                             ]
                         }
                         if (LLM_SERVE == 'vLLM') {
                             return [
-                                'hf://Qwen/Qwen3-0.6B',
-                                'hf://Qwen/Qwen3-4B',
-                                'hf://Qwen/Qwen3-8B',
-                                'hf://Qwen/Qwen3-14B'
+                                'hf://Qwen/Qwen3.5-9B-Base'
                             ]
                         }
                         return ['먼저 LLM_SERVE를 선택하세요.']
@@ -122,101 +117,46 @@ pipeline {
             }
         }
 
-        stage('Generate Model Config') {
-            steps {
-                script {
-                    def projectName = params.PROJECT_NAME.trim()
-                    def serviceType = params.SERVICE_TYPE
-                    def llmServe = params.LLM_SERVE
-                    def llmModel = params.LLM_MODEL
-                    def engineSuffix = llmServe.toLowerCase()
-                    def normalizedProjectName = projectName
-                        .toLowerCase()
-                        .replaceAll('[^a-z0-9-]', '-')
-                        .replaceAll('-+', '-')
-                        .replaceAll('(^-|-$)', '')
-                    def modelConfigName = "${normalizedProjectName}-${engineSuffix}"
-                    def modelBlock = ""
-
-                    if (llmServe == 'ollama') {
-                        modelBlock = """
-  ${modelConfigName}:
-    enabled: true
-    features: ["${serviceType}"]
-    url: "${llmModel}"
-    engine: OLlama
-    env:
-      OLLAMA_KEEP_ALIVE: "1"
-      OLLAMA_MAX_LOADED_MODELS: "2"
-      OLLAMA_FLASH_ATTENTION: "true"
-    minReplicas: 1
-    resourceProfile: amd-gpu-rx9070xt:1"""
-                    } else {
-                        // vLLM
-                        modelBlock = """
-  ${modelConfigName}:
-    enabled: true
-    features: [${serviceType}]
-    url: ${llmModel}
-    engine: VLLM
-    env:
-      HIP_FORCE_DEV_KERNARG: "1"
-      NCCL_MIN_NCHANNELS: "112"
-      TORCH_BLAS_PREFER_HIPBLASLT: "1"
-      VLLM_USE_TRITON_FLASH_ATTN: "0"
-      VLLM_FP8_PADDING: "0"
-    args:
-      - --trust-remote-code
-      - --max-model-len=8192
-      - --max-num-batched-tokens=4096
-      - --max-num-seqs=64
-      - --tensor-parallel-size=1
-    minReplicas: 1
-    resourceProfile: amd-gpu-rx9070xt:1
-    targetRequests: 64"""
-                    }
-
-                    // values.yaml에 모델 블럭 추가 (중복 방지)
-                    def valuesContent = readFile(env.VALUES_FILE)
-
-                    if (valuesContent.contains("${modelConfigName}:")) {
-                        echo "⚠️ 모델 설정 '${modelConfigName}' 블럭이 이미 존재합니다. 입력값 기준으로 전체 덮어씁니다."
-                        // catalog 하위의 동일 project 블럭 전체를 새 modelBlock으로 교체
-                        def escapedProject = java.util.regex.Pattern.quote(modelConfigName)
-                        def blockPattern = "(?ms)^  ${escapedProject}:\\n(?:    .*\\n|\\n)*?(?=^  [^\\s].*:\\n|\\z)"
-                        def normalizedBlock = modelBlock.startsWith("\n") ? modelBlock.substring(1) : modelBlock
-                        valuesContent = valuesContent.replaceFirst(blockPattern, normalizedBlock + "\n")
-                        writeFile file: env.VALUES_FILE, text: valuesContent
-                    } else {
-                        // 새 블럭 append
-                        sh "echo '${modelBlock}' >> ${env.VALUES_FILE}"
-                        echo "✅ 새 모델 블럭 추가 완료: ${modelConfigName}"
-                    }
-
-                    echo "\n📄 현재 values.yaml:"
-                    sh "cat ${env.VALUES_FILE}"
-                }
-            }
-        }
-
         stage('Generate Kong Service') {
             steps {
                 script {
                     def projectName = params.PROJECT_NAME.trim()
-                    def llmServe = params.LLM_SERVE
-                    def engineSuffix = llmServe.toLowerCase()
                     def normalizedProjectName = projectName
                         .toLowerCase()
                         .replaceAll('[^a-z0-9-]', '-')
                         .replaceAll('-+', '-')
                         .replaceAll('(^-|-$)', '')
-                    def modelConfigName = "${normalizedProjectName}-${engineSuffix}"
                     def serviceFile = "kong/services/${projectName}.yaml"
+                    def valuesContent = readFile(env.VALUES_FILE)
+                    def modelConfigMatches = []
+                    def modelBlockMatcher = valuesContent =~ "(?ms)^  ([^\\s][^:]*):\\n(?:    .*\\n|\\n)*?(?=^  [^\\s].*:\\n|\\z)"
+
+                    modelBlockMatcher.each { match ->
+                        def modelName = match[1]
+                        def modelBlock = match[0]
+                        def modelUrlMatcher = modelBlock =~ "(?m)^    url:\\s*[\"']?([^\"'\\n]+)[\"']?\\s*\$"
+
+                        if (modelUrlMatcher.find()) {
+                            def definedModelUrl = modelUrlMatcher.group(1).trim()
+                            if (definedModelUrl == params.LLM_MODEL || definedModelUrl.startsWith("${params.LLM_MODEL}:")) {
+                                modelConfigMatches << modelName
+                            }
+                        }
+                    }
+
+                    if (modelConfigMatches.size() == 0) {
+                        error "❌ ${env.VALUES_FILE}에서 선택한 모델 '${params.LLM_MODEL}'에 해당하는 catalog 항목을 찾지 못했습니다."
+                    }
+                    if (modelConfigMatches.size() > 1) {
+                        error "❌ 선택한 모델 '${params.LLM_MODEL}'에 해당하는 catalog 항목이 여러 개입니다: ${modelConfigMatches.join(', ')}"
+                    }
+
+                    def modelConfigName = modelConfigMatches[0]
 
                     def kongServiceYaml = """apiVersion: v1
 kind: Service
 metadata:
-  name: ${modelConfigName}
+  name: ${normalizedProjectName}
   namespace: kubeai
 spec:
   selector:
@@ -229,7 +169,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: ${modelConfigName}
+  name: ${normalizedProjectName}
   namespace: kubeai
   annotations:
     konghq.com/strip-path: "true"
@@ -242,7 +182,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: ${modelConfigName}
+                name: ${normalizedProjectName}
                 port:
                   number: 8000
 """
@@ -250,6 +190,8 @@ spec:
                     // Kong 서비스 파일 생성 또는 덮어쓰기
                     writeFile file: serviceFile, text: kongServiceYaml
                     echo "✅ Kong 서비스 파일 생성 완료: ${serviceFile}"
+                    echo "  - Project Service: ${normalizedProjectName}"
+                    echo "  - Target Model: ${modelConfigName}"
                     
                     echo "\n📄 생성된 Kong Service:"
                     sh "cat ${serviceFile}"
@@ -261,7 +203,7 @@ spec:
             steps {
                 script {
                     def branchName = params.PROJECT_NAME.trim()
-                    def commitMsg = "feat(${branchName}): deploy ${params.LLM_SERVE} model ${params.LLM_MODEL} [${params.SERVICE_TYPE}]"
+                    def commitMsg = "feat(${branchName}): configure Kong service for ${params.LLM_MODEL}"
 
                     withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIALS_ID, usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                         withEnv(["BRANCH_NAME=${branchName}", "COMMIT_MSG=${commitMsg}"]) {
@@ -377,7 +319,7 @@ spec:
         success {
             echo """
             ╔══════════════════════════════════════════╗
-            ║     ✅ Model 배포 파이프라인 성공!       ║
+            ║     ✅ Kong 서비스 생성 완료!            ║
             ╠══════════════════════════════════════════╣
             ║  Project : ${params.PROJECT_NAME}        
             ║  Service : ${params.SERVICE_TYPE}        
