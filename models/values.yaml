@@ -37,7 +37,7 @@ catalog:
       OLLAMA_KEEP_ALIVE: "1" # Keep the model loaded in memory
       OLLAMA_MAX_LOADED_MODELS: "1"
       OLLAMA_FLASH_ATTENTION: "true" # Enable Flash Attention
-    minReplicas: 1
+    minReplicas: 0
     scaleDownDelaySeconds: 60
     resourceProfile: amd-gpu-rx9070xt:1
 
