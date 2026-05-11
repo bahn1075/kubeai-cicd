@@ -156,20 +156,7 @@ pipeline {
 
                     def modelConfigName = modelConfigMatches[0]
 
-                    def kongServiceYaml = """apiVersion: v1
-kind: Service
-metadata:
-  name: ${normalizedProjectName}
-  namespace: kubeai
-spec:
-  selector:
-    model: ${modelConfigName}
-  ports:
-    - name: http
-      port: 8000
-      targetPort: 8000
----
-apiVersion: networking.k8s.io/v1
+                    def kongServiceYaml = """apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: ${normalizedProjectName}
@@ -185,15 +172,16 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: ${normalizedProjectName}
+                name: kubeai
                 port:
-                  number: 8000
+                  number: 80
 """
 
                     // Kong 서비스 파일 생성 또는 덮어쓰기
                     writeFile file: serviceFile, text: kongServiceYaml
                     echo "✅ Kong 서비스 파일 생성 완료: ${serviceFile}"
-                    echo "  - Project Service: ${normalizedProjectName}"
+                    echo "  - Project Route: /${projectName}"
+                    echo "  - Backend Service: kubeai:80"
                     echo "  - Target Model: ${modelConfigName}"
                     
                     echo "\n📄 생성된 Kong Service:"
