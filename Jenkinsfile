@@ -129,17 +129,20 @@ pipeline {
                     def serviceFile = "kong/services/${projectName}.yaml"
                     def valuesContent = readFile(env.VALUES_FILE)
                     def modelConfigMatches = []
-                    def modelBlockMatcher = valuesContent =~ "(?ms)^  ([^\\s][^:]*):\\n(?:    .*\\n|\\n)*?(?=^  [^\\s].*:\\n|\\z)"
+                    def currentModelName = null
 
-                    modelBlockMatcher.each { match ->
-                        def modelName = match[1]
-                        def modelBlock = match[0]
-                        def modelUrlMatcher = modelBlock =~ "(?m)^    url:\\s*[\"']?([^\"'\\n]+)[\"']?\\s*\$"
+                    valuesContent.readLines().each { line ->
+                        if (line.startsWith('  ') && !line.startsWith('    ') && line.endsWith(':')) {
+                            currentModelName = line.trim().replaceFirst(':$', '')
+                        } else if (currentModelName && line.trim().startsWith('url:')) {
+                            def definedModelUrl = line.trim().substring('url:'.length()).trim()
+                            if ((definedModelUrl.startsWith('"') && definedModelUrl.endsWith('"')) ||
+                                (definedModelUrl.startsWith("'") && definedModelUrl.endsWith("'"))) {
+                                definedModelUrl = definedModelUrl.substring(1, definedModelUrl.length() - 1)
+                            }
 
-                        if (modelUrlMatcher.find()) {
-                            def definedModelUrl = modelUrlMatcher.group(1).trim()
                             if (definedModelUrl == params.LLM_MODEL || definedModelUrl.startsWith("${params.LLM_MODEL}:")) {
-                                modelConfigMatches << modelName
+                                modelConfigMatches << currentModelName
                             }
                         }
                     }
