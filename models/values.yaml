@@ -57,7 +57,6 @@ catalog:
       - --max-num-batched-tokens=1024   # 또는 2048
       - --max-num-seqs=32               # 동시 시퀀스 제한
       - --gpu-memory-utilization=0.80
-      - --language-model-only           # 비전 인코더/프로파일링 비활성화
       - --enforce-eager                 # 초기 피크 완화
     # 필요 시 환경변수
     env:
