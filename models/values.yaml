@@ -63,5 +63,6 @@ catalog:
     env:
       # 초기화/컴파일 변동성 줄이기용 선택사항
       VLLM_USE_TRITON_FLASH_ATTN: "0"
+      HF_HUB_DISABLE_XET: "1"
       # 디버깅 시 메모리 추가 여유가 필요하면 로깅 줄이기
       # VLLM_DISABLE_LOG_REQUESTS: "1"
