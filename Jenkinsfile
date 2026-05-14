@@ -38,8 +38,8 @@ properties([
                     script: """
                         if (LLM_SERVE == 'ollama') {
                             return [
-                                'ollama://bge-m3',
                                 'ollama://exaone3.5',
+                                'ollama://bge-m3',
                                 'ollama://qwen3.5:9b'
                             ]
                         }
@@ -208,20 +208,20 @@ spec:
                                     echo 'No changes to commit'
                                 else
                                     git commit -m "$COMMIT_MSG"
+                                fi
 
-                                    # Jenkins credential username이 이메일인 경우 user 부분만 추출
-                                    PUSH_USER="${GIT_USERNAME%@*}"
-                                    if [ -z "$PUSH_USER" ]; then
-                                        PUSH_USER="$GIT_USERNAME"
-                                    fi
+                                # Jenkins credential username이 이메일인 경우 user 부분만 추출
+                                PUSH_USER="${GIT_USERNAME%@*}"
+                                if [ -z "$PUSH_USER" ]; then
+                                    PUSH_USER="$GIT_USERNAME"
+                                fi
 
-                                    if ! git -c credential.username="$PUSH_USER" -c credential.helper='!f() { echo "password=$GIT_PASSWORD"; }; f' push origin "$BRANCH_NAME"; then
-                                        echo "❌ Git push 실패: Jenkins credential 'github' 권한을 확인하세요."
-                                        echo "   - Username: GitHub 로그인 ID (이메일 대신 계정명 권장)"
-                                        echo "   - Password: GitHub PAT"
-                                        echo "   - PAT 권한: repo(클래식) 또는 Contents: Read and write(fine-grained)"
-                                        exit 1
-                                    fi
+                                if ! git -c credential.username="$PUSH_USER" -c credential.helper='!f() { echo "password=$GIT_PASSWORD"; }; f' push origin "HEAD:$BRANCH_NAME"; then
+                                    echo "❌ Git push 실패: Jenkins credential 'github' 권한을 확인하세요."
+                                    echo "   - Username: GitHub 로그인 ID (이메일 대신 계정명 권장)"
+                                    echo "   - Password: GitHub PAT"
+                                    echo "   - PAT 권한: repo(클래식) 또는 Contents: Read and write(fine-grained)"
+                                    exit 1
                                 fi
                             '''
                         }
@@ -274,7 +274,14 @@ spec:
                                     exit 0
                                 fi
 
-                                PAYLOAD="{\\"title\\":\\"Merge $BRANCH_NAME into $BASE_BRANCH\\",\\"head\\":\\"$BRANCH_NAME\\",\\"base\\":\\"$BASE_BRANCH\\",\\"body\\":\\"Auto-created by Jenkins pipeline.\\"}"
+                                if ! git ls-remote --exit-code --heads origin "$BRANCH_NAME" >/dev/null 2>&1; then
+                                    echo "❌ 원격 브랜치를 찾지 못했습니다: origin/$BRANCH_NAME"
+                                    echo "   PR 생성 전 Commit & Push 단계에서 브랜치 push가 성공했는지 확인하세요."
+                                    exit 1
+                                fi
+
+                                HEAD_BRANCH="$REPO_OWNER:$BRANCH_NAME"
+                                PAYLOAD="{\\"title\\":\\"Merge $BRANCH_NAME into $BASE_BRANCH\\",\\"head\\":\\"$HEAD_BRANCH\\",\\"base\\":\\"$BASE_BRANCH\\",\\"body\\":\\"Auto-created by Jenkins pipeline.\\"}"
                                 CREATED_PR_RESPONSE=$(mktemp)
                                 CREATED_HTTP_CODE=$(curl -sS -o "$CREATED_PR_RESPONSE" -w "%{http_code}" -X POST \
                                   -H "$AUTH_HEADER" \
