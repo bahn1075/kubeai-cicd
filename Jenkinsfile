@@ -240,6 +240,39 @@ spec:
                         return
                     }
 
+                    def serviceFile = "kong/services/${branchName}.yaml"
+                    def prBody = """## 🚀 프로젝트 생성 요청
+
+### 생성 대상
+- **프로젝트**: `${branchName}`
+
+### 요청 사항
+- Service Type: `${params.SERVICE_TYPE}`
+- LLM Serve: `${params.LLM_SERVE}`
+- LLM Model: `${params.LLM_MODEL}`
+
+### 생성 항목
+- Kong Service: `${serviceFile}`
+- Project Route: `/${branchName}`
+- Backend Service: `kubeai:80`
+- Git Branch: `${branchName}`
+
+### ⚠️ 주의사항
+**이 PR을 머지하면 다음이 실행됩니다:**
+1. Kong 서비스 생성 또는 변경
+
+---
+**Auto-created by Jenkins Pipeline**"""
+
+                    def prTitle = "Create project: ${branchName}"
+                    def jsonPayload = groovy.json.JsonOutput.toJson([
+                        title: prTitle,
+                        head: "${env.REPO_OWNER}:${branchName}",
+                        base: env.BASE_BRANCH,
+                        body: prBody
+                    ])
+                    writeFile file: 'pr-payload.json', text: jsonPayload
+
                     withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIALS_ID, usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                         withEnv(["BRANCH_NAME=${branchName}"]) {
                             sh '''
@@ -280,15 +313,14 @@ spec:
                                     exit 1
                                 fi
 
-                                HEAD_BRANCH="$REPO_OWNER:$BRANCH_NAME"
-                                PAYLOAD="{\\"title\\":\\"Merge $BRANCH_NAME into $BASE_BRANCH\\",\\"head\\":\\"$HEAD_BRANCH\\",\\"base\\":\\"$BASE_BRANCH\\",\\"body\\":\\"Auto-created by Jenkins pipeline.\\"}"
                                 CREATED_PR_RESPONSE=$(mktemp)
                                 CREATED_HTTP_CODE=$(curl -sS -o "$CREATED_PR_RESPONSE" -w "%{http_code}" -X POST \
                                   -H "$AUTH_HEADER" \
                                   -H "$ACCEPT_HEADER" \
                                   -H "$API_VERSION_HEADER" \
+                                  -H "Content-Type: application/json" \
                                   "$API_URL/pulls" \
-                                  -d "$PAYLOAD" \
+                                  -d @pr-payload.json \
                                   )
                                 if [ "$CREATED_HTTP_CODE" -ge 400 ]; then
                                     echo "❌ PR 생성 실패 (HTTP $CREATED_HTTP_CODE)"
