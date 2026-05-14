@@ -93,7 +93,7 @@ kubeai-cicd/
 ```groovy
 PROJECT_NAME: bge-m3
 SERVICE_TYPE: TextEmbedding
-LLM_SERVE: ollama
+LLM_SERVE: ollama줘
 LLM_MODEL: ollama://bge-m3
 ```
 
@@ -103,7 +103,7 @@ LLM_MODEL: ollama://bge-m3
 
 **파라미터:**
 - `PROJECT_NAME`: 삭제할 프로젝트 이름
-
+줘
 **수행 작업:**
 1. `delete-{PROJECT_NAME}` 브랜치 생성
 2. `kong/services/{PROJECT_NAME}.yaml` 삭제

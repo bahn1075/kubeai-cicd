@@ -48,7 +48,7 @@ catalog:
     engine: VLLM
     minReplicas: 0
     resourceProfile: amd-gpu-rx9070xt:1
-    cacheProfile: model-cache-150gb
+    cacheProfile: model-cache-80gb
     # 컨테이너 메모리 제한도 너무 낮지 않게(예: 12~14Gi 이상) 설정 권장
     # e.g. KubeAI/클러스터 설정에서 memory: "14Gi"
     args:
