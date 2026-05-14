@@ -57,12 +57,10 @@ catalog:
       - --max-num-batched-tokens=256
       - --max-num-seqs=4
       - --gpu-memory-utilization=0.60
-      - --cpu-offload-gb=6
       - --language-model-only
       - --enforce-eager                 # 초기 피크 완화
     # 필요 시 환경변수
     env:
       HF_HUB_DISABLE_XET: "1"
-      PYTORCH_ALLOC_CONF: "expandable_segments:True"
       # 디버깅 시 메모리 추가 여유가 필요하면 로깅 줄이기
       # VLLM_DISABLE_LOG_REQUESTS: "1"
