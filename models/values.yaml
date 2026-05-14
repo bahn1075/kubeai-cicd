@@ -53,15 +53,16 @@ catalog:
     # e.g. KubeAI/클러스터 설정에서 memory: "14Gi"
     args:
       # - --trust-remote-code
-      - --max-model-len=8192            # 또는 16384
-      - --max-num-batched-tokens=1024   # 또는 2048
-      - --max-num-seqs=32               # 동시 시퀀스 제한
-      - --gpu-memory-utilization=0.80
+      - --max-model-len=2048
+      - --max-num-batched-tokens=256
+      - --max-num-seqs=4
+      - --gpu-memory-utilization=0.60
+      - --cpu-offload-gb=6
+      - --swap-space=2
       - --enforce-eager                 # 초기 피크 완화
     # 필요 시 환경변수
     env:
-      # 초기화/컴파일 변동성 줄이기용 선택사항
-      VLLM_USE_TRITON_FLASH_ATTN: "0"
       HF_HUB_DISABLE_XET: "1"
+      PYTORCH_ALLOC_CONF: "expandable_segments:True"
       # 디버깅 시 메모리 추가 여유가 필요하면 로깅 줄이기
       # VLLM_DISABLE_LOG_REQUESTS: "1"
