@@ -57,6 +57,7 @@ catalog:
       - --max-num-batched-tokens=256
       - --max-num-seqs=4
       - --gpu-memory-utilization=0.60
+      - --cpu-offload-gb=2
       - --language-model-only
       - --enforce-eager                 # 초기 피크 완화
     # 필요 시 환경변수
